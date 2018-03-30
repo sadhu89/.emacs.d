@@ -79,6 +79,7 @@
 (delete-selection-mode t)
 
 (toggle-frame-maximized)
+(setq ns-use-native-fullscreen nil)
 
 ;; store all backup and autosave files in the tmp dir
 (setq backup-directory-alist
@@ -140,6 +141,11 @@
 (global-set-key (kbd "s-P") 'counsel-M-x)
 (global-set-key (kbd "C-s-<down>") 'move-text-down)
 (global-set-key (kbd "C-s-<up>") 'move-text-up)
+(global-set-key (kbd "s-<up>") 'beginning-of-buffer)
+(global-set-key (kbd "s-<down>") 'end-of-buffer)
+(global-set-key (kbd "s-b") 'ivy-switch-buffer)
+(global-set-key (kbd "s-`") 'other-frame)
+;; (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
 ;; extend the help commands
 (define-key 'help-command (kbd "C-f") #'find-function)
@@ -184,6 +190,30 @@
 
 (setq initial-scratch-message nil)
 
+;; "prefer" side-by-side window splits over stacked ones
+;; https://stackoverflow.com/questions/23659909/reverse-evaluation-order-of-split-height-threshold-and-split-width-threshold-in
+(defun my-split-window-sensibly (&optional window)
+  (let ((window (or window (selected-window))))
+    (or (and (window-splittable-p window t)
+             ;; Split window horizontally.
+             (with-selected-window window
+               (split-window-right)))
+        (and (window-splittable-p window)
+             ;; Split window vertically.
+             (with-selected-window window
+               (split-window-below)))
+        (and (eq window (frame-root-window (window-frame window)))
+             (not (window-minibuffer-p window))
+             ;; If WINDOW is the only window on its frame and is not the
+             ;; minibuffer window, try to split it horizontally disregarding
+             ;; the value of `split-width-threshold'.
+             (let ((split-width-threshold 0))
+               (when (window-splittable-p window t)
+                 (with-selected-window window
+                   (split-window-right))))))))
+
+(setq split-window-preferred-function 'my-split-window-sensibly)
+
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
 
@@ -207,15 +237,24 @@
 (use-package wgrep
   :ensure t)
 
+(use-package spacemacs-common
+    :ensure spacemacs-theme
+    :config (load-theme 'spacemacs-dark t))
+
+;; (use-package zenburn-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'zenburn t))
+
 ;; (use-package doom-themes
 ;;   :ensure t
 ;;   :config
 ;;   (load-theme 'doom-one t))
 
-(use-package solarized-theme
-  :ensure t
-  :config
-  (load-theme 'solarized-dark t))
+;; (use-package solarized-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'solarized-dark t))
 
 ;; (use-package color-theme-sanityinc-tomorrow
 ;;   :ensure t
@@ -287,13 +326,23 @@
   :ensure t
   :bind ("C-=" . er/expand-region))
 
-(use-package smartparens
+;; (use-package smartparens
+;;   :ensure t
+;;   :diminish smartparens-mode
+;;   :config
+;;   (progn
+;;     (require 'smartparens-config)
+;;     (smartparens-global-mode 1)))
+
+(use-package paredit
   :ensure t
-  :diminish smartparens-mode
   :config
-  (progn
-    (require 'smartparens-config)
-    (smartparens-global-mode 1)))
+  (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
+  ;; enable in the *scratch* buffer
+  (add-hook 'lisp-interaction-mode-hook #'paredit-mode)
+  (add-hook 'ielm-mode-hook #'paredit-mode)
+  (add-hook 'lisp-mode-hook #'paredit-mode)
+  (add-hook 'eval-expression-minibuffer-setup-hook #'paredit-mode))
 
 (use-package paren
   :config
@@ -342,7 +391,7 @@
 
 (use-package ace-window
   :ensure t
-  :bind ("C-x o" . ace-window)
+  :bind ("C-<tab>" . ace-window)
   :config
   (setq aw-scope 'frame))
 
@@ -449,6 +498,21 @@
   :config (progn
             (global-rbenv-mode)
             (add-hook 'enh-ruby-mode-hook 'rbenv-use-corresponding)))
+
+(use-package clojure-mode
+  :ensure t
+  :config
+  (add-hook 'clojure-mode-hook #'paredit-mode)
+  (add-hook 'clojure-mode-hook #'subword-mode)
+  (add-hook 'clojure-mode-hook #'rainbow-delimiters-mode))
+
+(use-package cider
+  :ensure t
+  :config
+  (add-hook 'cider-mode-hook #'eldoc-mode)
+  (add-hook 'cider-repl-mode-hook #'eldoc-mode)
+  (add-hook 'cider-repl-mode-hook #'paredit-mode)
+  (add-hook 'cider-repl-mode-hook #'rainbow-delimiters-mode))
 
 ;; (use-package js2-mode
 ;;   :ensure t
@@ -665,7 +729,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (company transpose-frame buffer-move treemacs rjsx-mode spaceline spaceline-config ag use-package))))
+    (cider company transpose-frame buffer-move treemacs rjsx-mode spaceline spaceline-config ag use-package))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
