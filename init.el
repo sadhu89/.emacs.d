@@ -3,8 +3,8 @@
 (add-to-list 'package-archives
              '("melpa" . "https://melpa.org/packages/") t)
 
-;; (setq mac-command-modifier 'meta)
-;; (setq mac-option-modifier 'super)
+(setq mac-command-modifier 'super)
+(setq mac-option-modifier 'meta)
 
 (package-initialize)
 ;; update the package metadata is the local cache is missing
@@ -44,9 +44,9 @@
 (setq inhibit-startup-screen t)
 
 ;; nice scrolling
-(setq scroll-margin 0
-      scroll-conservatively 100000
-      scroll-preserve-screen-position 1)
+;; (setq scroll-margin 0
+;;       scroll-conservatively 100000
+;;       scroll-preserve-screen-position 1)
 
 ;; mode line settings
 (line-number-mode t)
@@ -78,8 +78,8 @@
 ;; delete the selection with a keypress
 (delete-selection-mode t)
 
-(toggle-frame-maximized)
-(setq ns-use-native-fullscreen nil)
+;(toggle-frame-maximized)
+;(setq ns-use-native-fullscreen nil)
 
 ;; store all backup and autosave files in the tmp dir
 (setq backup-directory-alist
@@ -145,6 +145,9 @@
 (global-set-key (kbd "s-<down>") 'end-of-buffer)
 (global-set-key (kbd "s-b") 'ivy-switch-buffer)
 (global-set-key (kbd "s-`") 'other-frame)
+(global-set-key (kbd "s-1") 'delete-other-windows)
+(global-set-key (kbd "s-2") (lambda () (interactive)(split-window-vertically) (other-window 1)))
+(global-set-key (kbd "s-3") (lambda () (interactive)(split-window-horizontally) (other-window 1)))
 ;; (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
 ;; extend the help commands
@@ -157,9 +160,6 @@
 
 ; don't ask for confirmation when opening symlinked file
 (setq vc-follow-symlinks t )
-
-(global-set-key "\C-x2" (lambda () (interactive)(split-window-vertically) (other-window 1)))
-(global-set-key "\C-x3" (lambda () (interactive)(split-window-horizontally) (other-window 1)))
 
 (defun save-buffers-kill-emacs-only-in-console ()
   "In a GUI environment, do nothing; otherwise `save-buffers-kill-emacs`."
@@ -414,7 +414,7 @@
 (use-package anzu
   :ensure t
   :bind (("M-%" . anzu-query-replace)
-         ("C-M-%" . anzu-query-replace-regexp))
+         ("M-s-f" . anzu-query-replace-regexp))
   :config
   (global-anzu-mode))
 
@@ -508,6 +508,7 @@
 
 (use-package cider
   :ensure t
+  :defer t
   :config
   (add-hook 'cider-mode-hook #'eldoc-mode)
   (add-hook 'cider-repl-mode-hook #'eldoc-mode)
@@ -721,7 +722,6 @@
          ("s-g x" . dumb-jump-go-prefer-external)
          ("s-g z" . dumb-jump-go-prefer-external-other-window))
   :config (setq dumb-jump-selector 'ivy))
-
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -729,7 +729,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (cider company transpose-frame buffer-move treemacs rjsx-mode spaceline spaceline-config ag use-package))))
+    (dumb-jump multi-term cliphist multiple-cursors treemacs-projectile treemacs transpose-frame crux undo-tree which-key diff-hl super-save flycheck-pos-tip flycheck-color-mode-line flycheck company yaml-mode markdown-mode haml-mode rjsx-mode web-mode cider clojure-mode rbenv rspec-mode rubocop inf-ruby ruby-tools rainbow-mode rainbow-delimiters move-text exec-path-from-shell easy-kill anzu ace-window paredit expand-region counsel-projectile projectile github-browse-file spaceline magit spacemacs-theme wgrep smex use-package))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
