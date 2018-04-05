@@ -326,23 +326,25 @@
   :ensure t
   :bind ("C-=" . er/expand-region))
 
-;; (use-package smartparens
-;;   :ensure t
-;;   :diminish smartparens-mode
-;;   :config
-;;   (progn
-;;     (require 'smartparens-config)
-;;     (smartparens-global-mode 1)))
-
-(use-package paredit
+(use-package smartparens
   :ensure t
-  :config
-  (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
-  ;; enable in the *scratch* buffer
-  (add-hook 'lisp-interaction-mode-hook #'paredit-mode)
-  (add-hook 'ielm-mode-hook #'paredit-mode)
-  (add-hook 'lisp-mode-hook #'paredit-mode)
-  (add-hook 'eval-expression-minibuffer-setup-hook #'paredit-mode))
+  :diminish smartparens-mode
+  :init
+  (progn
+    (require 'smartparens-config)
+    (sp-use-paredit-bindings)
+    (smartparens-global-mode 1)))
+
+;; (use-package paredit
+;;   :ensure t
+;;   :config
+;;   (put 'paredit-forward-delete 'delete-selection 'supersede)
+;;   (add-hook 'emacs-lisp-mode-hook #'paredit-mode)
+;;   ;; enable in the *scratch* buffer
+;;   (add-hook 'lisp-interaction-mode-hook #'paredit-mode)
+;;   (add-hook 'ielm-mode-hook #'paredit-mode)
+;;   (add-hook 'lisp-mode-hook #'paredit-mode)
+;;   (add-hook 'eval-expression-minibuffer-setup-hook #'paredit-mode))
 
 (use-package paren
   :config
@@ -470,10 +472,11 @@
 
 (use-package inf-ruby
   :ensure t
+  :init
+  (add-hook 'compilation-filter-hook 'inf-ruby-auto-enter)
   :config
   (add-hook 'enh-ruby-mode-hook #'inf-ruby-minor-mode)
   (add-hook 'ruby-mode-hook #'inf-ruby-minor-mode)
-  (add-hook 'compilation-filter-hook 'inf-ruby-auto-enter)
   (setq company-global-modes '(not inf-ruby-mode)))
 
 (use-package rubocop
@@ -502,7 +505,7 @@
 (use-package clojure-mode
   :ensure t
   :config
-  (add-hook 'clojure-mode-hook #'paredit-mode)
+  ;; (add-hook 'clojure-mode-hook #'paredit-mode)
   (add-hook 'clojure-mode-hook #'subword-mode)
   (add-hook 'clojure-mode-hook #'rainbow-delimiters-mode))
 
@@ -512,7 +515,7 @@
   :config
   (add-hook 'cider-mode-hook #'eldoc-mode)
   (add-hook 'cider-repl-mode-hook #'eldoc-mode)
-  (add-hook 'cider-repl-mode-hook #'paredit-mode)
+  ;; (add-hook 'cider-repl-mode-hook #'paredit-mode)
   (add-hook 'cider-repl-mode-hook #'rainbow-delimiters-mode))
 
 ;; (use-package js2-mode
