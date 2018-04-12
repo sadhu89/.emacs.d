@@ -148,6 +148,7 @@
 (global-set-key (kbd "s-1") 'delete-other-windows)
 (global-set-key (kbd "s-2") (lambda () (interactive)(split-window-vertically) (other-window 1)))
 (global-set-key (kbd "s-3") (lambda () (interactive)(split-window-horizontally) (other-window 1)))
+(global-set-key (kbd "s-l") 'goto-line)
 ;; (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
 ;; extend the help commands
@@ -277,7 +278,10 @@
 ;;   (load-theme 'gruvbox-dark-medium t))
 
 
-(setq default-frame-alist '((font . "Source Code Pro-11")))
+;(setq default-frame-alist '((font . "Source Code Pro-11")))
+(add-hook 'prog-mode-hook 'mac-auto-operator-composition-mode)
+(setq default-frame-alist '((font . "Fira Code-11")))
+
 ;; highlight the current line
 (global-hl-line-mode +1)
 
@@ -329,11 +333,21 @@
 (use-package smartparens
   :ensure t
   :diminish smartparens-mode
+  :bind
+  (("C-s-f" . sp-forward-sexp)
+   ("C-s-b" . sp-backward-sexp))
   :init
   (progn
     (require 'smartparens-config)
     (sp-use-paredit-bindings)
-    (smartparens-global-mode 1)))
+    (smartparens-global-mode 1))
+  :config
+  (add-hook 'emacs-lisp-mode-hook #'smartparens-strict-mode)
+  ;; enable in the *scratch* buffer
+  (add-hook 'lisp-interaction-mode-hook #'smartparens-strict-mode)
+  (add-hook 'ielm-mode-hook #'smartparens-strict-mode)
+  (add-hook 'lisp-mode-hook #'smartparens-strict-mode)
+  (add-hook 'eval-expression-minibuffer-setup-hook #'smartparens-strict-mode))
 
 ;; (use-package paredit
 ;;   :ensure t
@@ -491,6 +505,9 @@
   :init (setq rspec-key-command-prefix (kbd "s-r"))
   :bind*
   (("s-r r" . rspec-rerun))
+  :bind
+  (("s-t" . rspec-toggle-spec-and-target)
+   ("s-4 t" . rspec-find-spec-or-target-other-window))
   :config
   (setq compilation-scroll-output t)
   (setq rspec-primary-source-dirs '("app")))
@@ -515,7 +532,9 @@
   :config
   (add-hook 'cider-mode-hook #'eldoc-mode)
   (add-hook 'cider-repl-mode-hook #'eldoc-mode)
+  (add-hook 'cider-repl-mode-hook #'smartparens-strict-mode)
   ;; (add-hook 'cider-repl-mode-hook #'paredit-mode)
+  (setq cider-allow-jack-in-without-project t)
   (add-hook 'cider-repl-mode-hook #'rainbow-delimiters-mode))
 
 ;; (use-package js2-mode
@@ -647,9 +666,9 @@
          ("C-c s" . crux-ispell-word-then-abbrev)
          ("C-c b" . crux-switch-to-previous-buffer)))
 
-(use-package transpose-frame
-  :ensure t
-  :bind ("s-t" . transpose-frame))
+;; (use-package transpose-frame
+;;   :ensure t
+;;   :bind ("s-t" . transpose-frame))
 
 (use-package treemacs
   :ensure t
