@@ -6,6 +6,10 @@
 (setq mac-command-modifier 'super)
 (setq mac-option-modifier 'meta)
 
+;; (auto-fill-mode 1)
+;; (setq comment-auto-fill-only-comments 1)
+(setq-default fill-column 100)
+
 (package-initialize)
 ;; update the package metadata is the local cache is missing
 (unless package-archive-contents
@@ -151,6 +155,11 @@
 (global-set-key (kbd "s-l") 'goto-line)
 ;; (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
+;; http://emacsredux.com/blog/2015/05/09/emacs-on-os-x/
+(setq insert-directory-program (executable-find "gls")
+      ;; https://oremacs.com/2015/01/13/dired-options/
+      dired-listing-switches "-laGh1v --group-directories-first")
+
 ;; extend the help commands
 (define-key 'help-command (kbd "C-f") #'find-function)
 (define-key 'help-command (kbd "C-k") #'find-function-on-key)
@@ -184,7 +193,7 @@
 (global-set-key (kbd "C-z") 'suspend-frame-only-in-console)
 (global-set-key (kbd "C-x C-z") 'suspend-frame-only-in-console)
 
-(setq special-display-buffer-names '("*rspec-compilation*" "*guard*"))
+;;(setq special-display-buffer-names '("*rspec-compilation*" "*guard*"))
 
 (setq initial-major-mode 'ruby-mode)
 (setq ruby-insert-encoding-magic-comment nil)
@@ -238,9 +247,14 @@
 (use-package wgrep
   :ensure t)
 
-(use-package spacemacs-common
-    :ensure spacemacs-theme
-    :config (load-theme 'spacemacs-dark t))
+(use-package spacemacs-theme
+  :defer t
+  :init
+  (load-theme 'spacemacs-dark t))
+
+;; (use-package spacemacs-common
+;;     :ensure spacemacs-theme
+;;     :config (load-theme 'spacemacs-dark t))
 
 ;; (use-package zenburn-theme
 ;;   :ensure t
@@ -285,12 +299,12 @@
 ;; highlight the current line
 (global-hl-line-mode +1)
 
-;; (use-package avy
-;;   :ensure t
-;;   :bind (("s-." . avy-goto-word-or-subword-1)
-;;          ("s-," . avy-goto-char))
-;;   :config
-;;   (setq avy-background t))
+(use-package avy
+  :ensure t
+  :bind (("s-." . avy-goto-word-or-subword-1)
+         ("s->" . avy-goto-char))
+  :config
+  (setq avy-background t))
 
 (use-package magit
   :ensure t
@@ -320,11 +334,22 @@
   (setq projectile-completion-system 'ivy)
   (setq projectile-switch-project-action 'projectile-dired))
 
+(defun counsel-projectile-find-file-occur ()
+    (cd (projectile-project-root))
+    (counsel-cmd-to-dired
+     (counsel--expand-ls
+      (format
+       "find . | grep -i -E '%s' | xargs ls"
+       (counsel-unquote-regex-parens ivy--old-re)))))
+
 (use-package counsel-projectile
   :ensure t
   :bind* ("s-F" . counsel-projectile-rg)
   :init
-  (counsel-projectile-mode))
+  (counsel-projectile-mode)
+  :config
+  (ivy-set-occur 'counsel-projectile-find-file 'counsel-projectile-find-file-occur)
+  (ivy-set-occur 'counsel-projectile 'counsel-projectile-find-file-occur))
 
 (use-package expand-region
   :ensure t
@@ -481,6 +506,15 @@
 ;;     (setq enh-ruby-deep-indent-paren nil
 ;;           enh-ruby-hanging-paren-deep-indent-level 2)))
 
+(use-package enh-ruby-mode
+  :ensure t
+  :mode (("spec\\.rb\\'" . enh-ruby-mode))
+  :interpreter "ruby"
+  :init
+  (progn
+    (setq enh-ruby-deep-indent-paren nil
+          enh-ruby-hanging-paren-deep-indent-level 2)))
+
 (use-package ruby-tools
   :ensure t)
 
@@ -492,6 +526,21 @@
   (add-hook 'enh-ruby-mode-hook #'inf-ruby-minor-mode)
   (add-hook 'ruby-mode-hook #'inf-ruby-minor-mode)
   (setq company-global-modes '(not inf-ruby-mode)))
+
+(use-package ruby-mode
+  :config
+  (add-hook 'ruby-mode-hook #'subword-mode)
+  ;; (setq ruby-align-chained-calls nil)
+  ;; (setq ruby-align-to-stmt-keywords nil)
+  ;; (setq ruby-deep-indent-paren nil)
+  ;; (setq ruby-deep-indent-paren-style nil)
+  ;; (setq ruby-use-smie nil)
+  ;; (setq ruby-align-chained-calls nil
+  ;;     ruby-align-to-stmt-keywords nil
+  ;;     ruby-deep-indent-paren nil
+  ;;     ruby-deep-indent-paren-style nil
+  ;;     ruby-use-smie nil)
+  )
 
 (use-package rubocop
   :ensure t
@@ -512,6 +561,13 @@
   (setq compilation-scroll-output t)
   (setq rspec-primary-source-dirs '("app")))
 
+(use-package minitest
+  :ensure t
+  :config
+  (progn
+    (setq minitest-use-bundler nil))
+  (add-hook 'ruby-mode-hook 'minitest-mode))
+
 (use-package rbenv
   :ensure t
   :init (setq rbenv-show-active-ruby-in-modeline nil)
@@ -523,6 +579,7 @@
   :ensure t
   :config
   ;; (add-hook 'clojure-mode-hook #'paredit-mode)
+  (add-hook 'clojure-mode-hook #'smartparens-strict-mode)
   (add-hook 'clojure-mode-hook #'subword-mode)
   (add-hook 'clojure-mode-hook #'rainbow-delimiters-mode))
 
@@ -608,6 +665,11 @@
         ispell-extra-args '("--sug-mode=ultra"))
   (add-hook 'text-mode-hook #'flyspell-mode)
   (add-hook 'prog-mode-hook #'flyspell-prog-mode))
+
+(use-package imenu-anywhere
+  :ensure t
+  :bind (("C-c i" . imenu-anywhere)
+         ("s-i" . imenu-anywhere)))
 
 (use-package super-save
   :ensure t
@@ -744,17 +806,32 @@
          ("s-g x" . dumb-jump-go-prefer-external)
          ("s-g z" . dumb-jump-go-prefer-external-other-window))
   :config (setq dumb-jump-selector 'ivy))
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   (quote
-    (dumb-jump multi-term cliphist multiple-cursors treemacs-projectile treemacs transpose-frame crux undo-tree which-key diff-hl super-save flycheck-pos-tip flycheck-color-mode-line flycheck company yaml-mode markdown-mode haml-mode rjsx-mode web-mode cider clojure-mode rbenv rspec-mode rubocop inf-ruby ruby-tools rainbow-mode rainbow-delimiters move-text exec-path-from-shell easy-kill anzu ace-window paredit expand-region counsel-projectile projectile github-browse-file spaceline magit spacemacs-theme wgrep smex use-package))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+
+;; temporarily highlight changes from yanking, etc
+(use-package volatile-highlights
+  :ensure t
+  :config
+  (volatile-highlights-mode +1))
+
+;;Sonic Pi
+;; (use-package sonic-pi
+;;   :ensure t
+;;   :config
+;;   (setq sonic-pi-path "/Users/sadhu/Developer/sonic-pi/")
+;;   (setq sonic-pi-server-bin             "app/server/ruby/bin/sonic-pi-server.rb")
+;;   (setq sonic-pi-compile-extensions-bin "app/server/ruby/bin/compile-extensions.rb"))
+
+;; (use-package dash
+;;   :ensure t)
+
+;; (use-package osc
+;;   :ensure t)
+
+;; (use-package highlight
+;;   :ensure t)
+
+;; config changes made through the customize UI will be stored here
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+
+(when (file-exists-p custom-file)
+  (load custom-file))
