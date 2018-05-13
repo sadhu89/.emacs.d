@@ -143,6 +143,7 @@
 (global-set-key (kbd "s-/") 'comment-line)
 (global-set-key (kbd "s-,") 'crux-find-user-init-file)
 (global-set-key (kbd "s-P") 'counsel-M-x)
+(global-set-key (kbd "s-p") 'counsel-projectile-find-file)
 (global-set-key (kbd "C-s-<down>") 'move-text-down)
 (global-set-key (kbd "C-s-<up>") 'move-text-up)
 (global-set-key (kbd "s-<up>") 'beginning-of-buffer)
@@ -197,6 +198,7 @@
 
 (setq initial-major-mode 'ruby-mode)
 (setq ruby-insert-encoding-magic-comment nil)
+(setq enh-ruby-add-encoding-comment-on-save nil)
 
 (setq initial-scratch-message nil)
 
@@ -308,7 +310,9 @@
 
 (use-package magit
   :ensure t
-  :bind (("C-x g" . magit-status)))
+  :bind
+  (("C-x g" . magit-status)
+   ("C-M-<tab>" . magit-section-cycle)))
 
 ;; (use-package magithub
 ;;   :ensure t
@@ -325,7 +329,7 @@
 
 (use-package projectile
   :ensure t
-  :bind ("s-p" . projectile-command-map)
+  :bind ("C-s-p" . projectile-command-map)
   :diminish (projectile-mode . "Pjtl");; diminish projectile mode to
                                       ;; work around
                                       ;; https://github.com/bbatsov/projectile/issues/1183
@@ -432,7 +436,7 @@
 
 (use-package ace-window
   :ensure t
-  :bind ("C-<tab>" . ace-window)
+  :bind* ("C-<tab>" . ace-window)
   :config
   (setq aw-scope 'frame))
 
@@ -515,8 +519,8 @@
     (setq enh-ruby-deep-indent-paren nil
           enh-ruby-hanging-paren-deep-indent-level 2)))
 
-(use-package ruby-tools
-  :ensure t)
+;; (use-package ruby-tools
+;;   :ensure t)
 
 (use-package inf-ruby
   :ensure t
@@ -528,6 +532,8 @@
   (setq company-global-modes '(not inf-ruby-mode)))
 
 (use-package ruby-mode
+  :bind
+  ("C-'" . ruby-toggle-string-quotes)
   :config
   (add-hook 'ruby-mode-hook #'subword-mode)
   ;; (setq ruby-align-chained-calls nil)
@@ -835,3 +841,61 @@
 
 (when (file-exists-p custom-file)
   (load custom-file))
+
+
+;; Configure `display-buffer' behaviour for some special buffers.
+(setq
+ display-buffer-alist
+ `(
+   ;; Put REPLs and error lists into the bottom side window
+   (,(rx bos
+         (or "*Help"                         ; Help buffers
+             "*Warnings*"                    ; Emacs warnings
+             "*Compile-Log*"                 ; Emacs byte compiler log
+             "*compilation"                  ; Compilation buffers
+             "*Rubocop"
+             "*rspec-compilation"            ; Rspec compilation buffers
+             "*Flycheck errors*"             ; Flycheck error list
+             "*shell"                        ; Shell window
+             "*sbt"                          ; SBT REPL and compilation buffer
+             "*ensime-update*"               ; Server update from Ensime
+             "*SQL"                          ; SQL REPL
+             "*Cargo"                        ; Cargo process buffers
+             (and (1+ nonl) " output*")      ; AUCTeX command output
+             ))
+    (display-buffer-reuse-window
+     display-buffer-in-side-window)
+    (side            . bottom)
+    (reusable-frames . visible)
+    (window-height   . 0.33))
+   ;; Let `display-buffer' reuse visible frames for all buffers.  This must
+   ;; be the last entry in `display-buffer-alist', because it overrides any
+   ;; later entry with more specific actions.
+   ("." nil (reusable-frames . visible))))
+
+(defun quit-bottom-side-windows ()
+  "Quit side windows of the current frame."
+  (interactive)
+  (dolist (window (window-at-side-list))
+    (quit-window nil window)))
+
+(global-set-key (kbd "C-c q") #'quit-bottom-side-windows)
+
+;; (defun ruby-mode-set-frozen-string-literal-true ()
+;;   (when (eq major-mode 'ruby-mode)
+;;     (save-excursion
+;;       (widen)
+;;       (goto-char (point-min))
+;;       (unless (looking-at "^# frozen_string_literal: true")
+;;         (insert "# frozen_string_literal: true\n\n")))))
+
+;; (add-hook 'ruby-mode-hook (lambda()
+;;                             (add-hook 'before-save-hook 'ruby-mode-set-frozen-string-literal-true)))
+
+(use-package autoinsert
+  :config
+  (setq auto-insert-query nil)
+  (setq auto-insert-alist
+        (cons '("\\.rb\\'" nil "# frozen_string_literal: true\n") auto-insert-alist))
+  (add-hook 'ruby-mode-hook 'auto-insert)
+  (add-hook 'enh-ruby-mode-hook 'auto-insert))
