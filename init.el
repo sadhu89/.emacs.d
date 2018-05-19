@@ -548,6 +548,20 @@
   ;;     ruby-use-smie nil)
   )
 
+(use-package ruby-hash-syntax
+  :ensure t)
+
+(use-package bundler
+  :ensure t)
+
+(use-package seeing-is-believing
+  :ensure t
+  :bind (:map ruby-mode-map
+              ("s-e e" . seeing-is-believing-run-as-xmpfilter)
+              ("s-e a" . seeing-is-believing-run)
+              ("s-e c" . seeing-is-believing-clear)
+              ("s-e m" . seeing-is-believing-mark-current-line-for-xmpfilter)))
+
 (use-package rubocop
   :ensure t
   :init (setq rubocop-keymap-prefix (kbd "s-R"))
@@ -819,6 +833,10 @@
   :config
   (volatile-highlights-mode +1))
 
+(use-package free-keys
+  :ensure t
+  :init (setq free-keys-modifiers '("" "C" "M" "C-M" "s")))
+
 ;;Sonic Pi
 ;; (use-package sonic-pi
 ;;   :ensure t
@@ -842,7 +860,7 @@
 (when (file-exists-p custom-file)
   (load custom-file))
 
-
+;; https://github.com/lunaryorn/swsnr.de/blob/master/_posts/2015-04-29-the-power-of-display-buffer-alist.md
 ;; Configure `display-buffer' behaviour for some special buffers.
 (setq
  display-buffer-alist
@@ -873,13 +891,12 @@
    ;; later entry with more specific actions.
    ("." nil (reusable-frames . visible))))
 
-(defun quit-bottom-side-windows ()
-  "Quit side windows of the current frame."
-  (interactive)
-  (dolist (window (window-at-side-list))
-    (quit-window nil window)))
-
-(global-set-key (kbd "C-c q") #'quit-bottom-side-windows)
+(use-package lunaryorn-window           ; Personal window utilities
+  :load-path "lisp/"
+  :defer t
+  :bind (("C-c q" . lunaryorn-quit-all-side-windows)))
+         ;; ("C-c w d" . lunaryorn-toggle-current-window-dedication)
+         ;; ("C-c w b" . lunaryorn-switch-to-minibuffer-window)))
 
 ;; (defun ruby-mode-set-frozen-string-literal-true ()
 ;;   (when (eq major-mode 'ruby-mode)
