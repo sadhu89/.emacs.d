@@ -82,7 +82,7 @@
 ;; delete the selection with a keypress
 (delete-selection-mode t)
 
-;(toggle-frame-maximized)
+(toggle-frame-maximized)
 ;(setq ns-use-native-fullscreen nil)
 
 ;; store all backup and autosave files in the tmp dir
@@ -160,12 +160,6 @@
 (setq insert-directory-program (executable-find "gls")
       ;; https://oremacs.com/2015/01/13/dired-options/
       dired-listing-switches "-laGh1v --group-directories-first")
-
-;; extend the help commands
-(define-key 'help-command (kbd "C-f") #'find-function)
-(define-key 'help-command (kbd "C-k") #'find-function-on-key)
-(define-key 'help-command (kbd "C-v") #'find-variable)
-(define-key 'help-command (kbd "C-l") #'find-library)
 
 (define-key 'help-command (kbd "C-i") #'info-display-manual)
 
@@ -314,6 +308,10 @@
   (("C-x g" . magit-status)
    ("C-M-<tab>" . magit-section-cycle)))
 
+(use-package git-timemachine
+  :ensure t
+  :bind (("s-g" . git-timemachine)))
+
 ;; (use-package magithub
 ;;   :ensure t
 ;;   :after magit
@@ -329,13 +327,11 @@
 
 (use-package projectile
   :ensure t
-  :bind ("C-s-p" . projectile-command-map)
-  :diminish (projectile-mode . "Pjtl");; diminish projectile mode to
-                                      ;; work around
-                                      ;; https://github.com/bbatsov/projectile/issues/1183
-  :config
-  (projectile-global-mode +1)
+  :init
   (setq projectile-completion-system 'ivy)
+  :config
+  (define-key projectile-mode-map (kbd "C-s-p") 'projectile-command-map)
+  (projectile-global-mode +1)
   (setq projectile-switch-project-action 'projectile-dired))
 
 (defun counsel-projectile-find-file-occur ()
@@ -477,8 +473,8 @@
 (use-package move-text
   :ensure t
   :bind
-  (([(meta shift up)] . move-text-up)
-   ([(meta shift down)] . move-text-down)))
+  (([(super control up)] . move-text-up)
+   ([(super control down)] . move-text-down)))
 
 (use-package rainbow-delimiters
   :ensure t
@@ -663,6 +659,23 @@
   :config
   (global-company-mode))
 
+(use-package hl-todo
+  :ensure t
+  :config
+  (global-hl-todo-mode))
+
+(use-package zop-to-char
+  :ensure t
+  :bind (("M-z" . zop-up-to-char)
+         ("M-Z" . zop-to-char)))
+
+(use-package flyspell
+  :config
+  (setq ispell-program-name "aspell" ; use aspell instead of ispell
+        ispell-extra-args '("--sug-mode=ultra"))
+  (add-hook 'text-mode-hook #'flyspell-mode)
+  (add-hook 'prog-mode-hook #'flyspell-prog-mode))
+
 (use-package flycheck
   :ensure t
   :config
@@ -678,18 +691,6 @@
   :config
   (eval-after-load 'flycheck
     '(setq flycheck-display-errors-function #'flycheck-pos-tip-error-messages)))
-
-(use-package flyspell
-  :config
-  (setq ispell-program-name "aspell" ; use aspell instead of ispell
-        ispell-extra-args '("--sug-mode=ultra"))
-  (add-hook 'text-mode-hook #'flyspell-mode)
-  (add-hook 'prog-mode-hook #'flyspell-prog-mode))
-
-(use-package imenu-anywhere
-  :ensure t
-  :bind (("C-c i" . imenu-anywhere)
-         ("s-i" . imenu-anywhere)))
 
 (use-package super-save
   :ensure t
@@ -723,7 +724,7 @@
   :bind (("C-c o" . crux-open-with)
          ("M-o" . crux-smart-open-line)
          ("C-c n" . crux-cleanup-buffer-or-region)
-         ("C-c f" . crux-recentf-ido-find-file)
+         ("C-c f" . crux-recentf-find-file)
          ("C-M-z" . crux-indent-defun)
          ("C-c u" . crux-view-url)
          ("C-c e" . crux-eval-and-replace)
@@ -735,7 +736,7 @@
          ("C-c TAB" . crux-indent-rigidly-and-copy-to-clipboard)
          ("s-," . crux-find-user-init-file)
          ("C-c S" . crux-find-shell-init-file)
-         ;; ("s-r" . crux-recentf-ido-find-file)
+         ;; ("s-r" . crux-recentf-find-file)
          ("s-j" . crux-top-join-line)
          ("C-^" . crux-top-join-line)
          ("s-k" . crux-kill-whole-line)
@@ -916,3 +917,11 @@
         (cons '("\\.rb\\'" nil "# frozen_string_literal: true\n") auto-insert-alist))
   (add-hook 'ruby-mode-hook 'auto-insert)
   (add-hook 'enh-ruby-mode-hook 'auto-insert))
+
+(use-package dashboard
+  :ensure t
+  :config
+  (setq dashboard-startup-banner 'logo)
+  (setq dashboard-items '((recents  . 10)
+                        (projects . 10)))
+  (dashboard-setup-startup-hook))
