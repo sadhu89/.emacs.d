@@ -915,11 +915,3 @@
         (cons '("\\.rb\\'" nil "# frozen_string_literal: true\n") auto-insert-alist))
   (add-hook 'ruby-mode-hook 'auto-insert)
   (add-hook 'enh-ruby-mode-hook 'auto-insert))
-
-(use-package dashboard
-  :ensure t
-  :config
-  (setq dashboard-startup-banner 'logo)
-  (setq dashboard-items '((recents  . 10)
-                        (projects . 10)))
-  (dashboard-setup-startup-hook))
