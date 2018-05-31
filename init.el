@@ -506,17 +506,15 @@
 ;;     (setq enh-ruby-deep-indent-paren nil
 ;;           enh-ruby-hanging-paren-deep-indent-level 2)))
 
-(use-package enh-ruby-mode
-  :ensure t
-  :mode (("spec\\.rb\\'" . enh-ruby-mode))
-  :interpreter "ruby"
-  :init
-  (progn
-    (setq enh-ruby-deep-indent-paren nil
-          enh-ruby-hanging-paren-deep-indent-level 2)))
+;; (use-package enh-ruby-mode
+;;   :ensure t
+;;   :mode (("spec\\.rb\\'" . enh-ruby-mode))
+;;   :interpreter "ruby"
+;;   :init
+;;   (progn
+;;     (setq enh-ruby-deep-indent-paren nil
+;;           enh-ruby-hanging-paren-deep-indent-level 2)))
 
-;; (use-package ruby-tools
-;;   :ensure t)
 
 (use-package inf-ruby
   :ensure t
@@ -532,8 +530,8 @@
   ("C-'" . ruby-toggle-string-quotes)
   :config
   (add-hook 'ruby-mode-hook #'subword-mode)
+  (setq ruby-align-to-stmt-keywords t)
   ;; (setq ruby-align-chained-calls nil)
-  ;; (setq ruby-align-to-stmt-keywords nil)
   ;; (setq ruby-deep-indent-paren nil)
   ;; (setq ruby-deep-indent-paren-style nil)
   ;; (setq ruby-use-smie nil)
