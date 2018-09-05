@@ -188,7 +188,7 @@
 (global-set-key (kbd "C-z") 'suspend-frame-only-in-console)
 (global-set-key (kbd "C-x C-z") 'suspend-frame-only-in-console)
 
-;;(setq special-display-buffer-names '("*rspec-compilation*" "*guard*"))
+(setq special-display-buffer-names '("*rspec-compilation*" "*guard*"))
 
 (setq initial-major-mode 'ruby-mode)
 (setq ruby-insert-encoding-magic-comment nil)
@@ -287,9 +287,9 @@
 ;;   (load-theme 'gruvbox-dark-medium t))
 
 
-;(setq default-frame-alist '((font . "Source Code Pro-11")))
-(add-hook 'prog-mode-hook 'mac-auto-operator-composition-mode)
-(setq default-frame-alist '((font . "Fira Code-11")))
+(setq default-frame-alist '((font . "Source Code Pro-13")))
+;(add-hook 'prog-mode-hook 'mac-auto-operator-composition-mode)
+;(setq default-frame-alist '((font . "Fira Code-13")))
 
 ;; highlight the current line
 (global-hl-line-mode +1)
@@ -465,6 +465,7 @@
 
 (use-package exec-path-from-shell
   :ensure t
+  :defer t ; Hack to make elm-format work
   :config
   (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize)))
@@ -654,7 +655,8 @@
   :ensure t
   :bind (("TAB" . company-indent-or-complete-common))
   :config
-  (global-company-mode))
+  (global-company-mode)
+  (add-to-list 'company-backends 'company-elm))
 
 (use-package hl-todo
   :ensure t
@@ -766,7 +768,16 @@
           treemacs-is-never-other-window      nil
           treemacs-goto-tag-strategy          'refetch-index)
   (treemacs-follow-mode t)
-  (treemacs-filewatch-mode t))
+  (treemacs-filewatch-mode t)
+  :bind
+  (:map global-map
+        ("M-0"       . treemacs-select-window)
+        ("C-x t 1"   . treemacs-delete-other-windows)
+        ([f8]        . treemacs)
+        ("C-x t B"   . treemacs-bookmark)
+        ("C-x t C-t" . treemacs-find-file)
+        ("C-x t M-t" . treemacs-find-tag)))
+
   ;; :bind
   ;; (:map global-map
   ;;       ("s-t t"  . treemacs-toggle)
@@ -774,36 +785,27 @@
   ;;       ("C-c 1"  . treemacs-delete-other-windows)
   ;;       ("s-t c"  . treemacs)
   ;;       ("s-t f"  . treemacs-find-file)))
+
 (use-package treemacs-projectile
-  :ensure t
-  :config
-  (setq treemacs-header-function #'treemacs-projectile-create-header)
-  :bind (:map global-map
-              ([f8]  . treemacs-projectile-toggle)))
+  :after treemacs projectile
+  :ensure t)
+
+;; (use-package treemacs-projectile
+;;   :ensure t
+;;   :config
+;;   (setq treemacs-header-function #'treemacs-projectile-create-header)
+;;   :bind (:map global-map
+;;               ([f8]  . treemacs-projectile-toggle)))
 
 (use-package multiple-cursors
   :ensure t
   :bind (("C-S-c C-S-c" . mc/edit-lines)
          ("s-d" . mc/mark-next-like-this)
+         ;;("s-D" . mc/skip-to-next-like-this)
          ("C-<" . mc/mark-previous-like-this)
          ("C-c C-<" . mc/mark-all-like-this)
          ("C-S-<mouse-1>" . mc/add-cursor-on-click)))
-  ;; :bind (:map region-bindings-mode-map
-  ;;        ("a"   . mc/mark-all-like-this)
-  ;;        ("p"   . mc/mark-previous-like-this)
-  ;;        ("M-p" . mc/skip-to-previous-like-this)
-  ;;        ("n"   . mc/mark-next-like-this)
-  ;;        ("M-n" . mc/skip-to-next-like-this)
-  ;;        ("P"   . mc/unmark-previous-like-this)
-  ;;        ("N"   . mc/unmark-next-like-this)
-  ;;        ("["   . mc/cycle-backward)
-  ;;        ("]"   . mc/cycle-forward)
-  ;;        ("m"   . mc/mark-more-like-this-extended)
-  ;;        ("h"   . mc-hide-unmatched-lines-mode)
-  ;;        ("\\"  . mc/vertical-align-with-space)
-  ;;        ("#"   . mc/insert-numbers) ; use num prefix to set the starting number
-  ;;        ("^"   . mc/edit-beginnings-of-lines)
-  ;;        ("$"   . mc/edit-ends-of-lines)))
+
 
 (use-package cliphist
   :ensure t
@@ -860,34 +862,34 @@
 
 ;; https://github.com/lunaryorn/swsnr.de/blob/master/_posts/2015-04-29-the-power-of-display-buffer-alist.md
 ;; Configure `display-buffer' behaviour for some special buffers.
-(setq
- display-buffer-alist
- `(
-   ;; Put REPLs and error lists into the bottom side window
-   (,(rx bos
-         (or "*Help"                         ; Help buffers
-             "*Warnings*"                    ; Emacs warnings
-             "*Compile-Log*"                 ; Emacs byte compiler log
-             "*compilation"                  ; Compilation buffers
-             "*Rubocop"
-             "*rspec-compilation"            ; Rspec compilation buffers
-             "*Flycheck errors*"             ; Flycheck error list
-             "*shell"                        ; Shell window
-             "*sbt"                          ; SBT REPL and compilation buffer
-             "*ensime-update*"               ; Server update from Ensime
-             "*SQL"                          ; SQL REPL
-             "*Cargo"                        ; Cargo process buffers
-             (and (1+ nonl) " output*")      ; AUCTeX command output
-             ))
-    (display-buffer-reuse-window
-     display-buffer-in-side-window)
-    (side            . bottom)
-    (reusable-frames . visible)
-    (window-height   . 0.33))
-   ;; Let `display-buffer' reuse visible frames for all buffers.  This must
-   ;; be the last entry in `display-buffer-alist', because it overrides any
-   ;; later entry with more specific actions.
-   ("." nil (reusable-frames . visible))))
+;; (setq
+;;  display-buffer-alist
+;;  `(
+;;    ;; Put REPLs and error lists into the bottom side window
+;;    (,(rx bos
+;;          (or "*Help"                         ; Help buffers
+;;              "*Warnings*"                    ; Emacs warnings
+;;              "*Compile-Log*"                 ; Emacs byte compiler log
+;;              "*compilation"                  ; Compilation buffers
+;;              "*Rubocop"
+;;              "*rspec-compilation"            ; Rspec compilation buffers
+;;              "*Flycheck errors*"             ; Flycheck error list
+;;              "*shell"                        ; Shell window
+;;              "*sbt"                          ; SBT REPL and compilation buffer
+;;              "*ensime-update*"               ; Server update from Ensime
+;;              "*SQL"                          ; SQL REPL
+;;              "*Cargo"                        ; Cargo process buffers
+;;              (and (1+ nonl) " output*")      ; AUCTeX command output
+;;              ))
+;;     (display-buffer-reuse-window
+;;      display-buffer-in-side-window)
+;;     (side            . bottom)
+;;     (reusable-frames . visible)
+;;     (window-height   . 0.33))
+;;    ;; Let `display-buffer' reuse visible frames for all buffers.  This must
+;;    ;; be the last entry in `display-buffer-alist', because it overrides any
+;;    ;; later entry with more specific actions.
+;;    ("." nil (reusable-frames . visible))))
 
 (use-package lunaryorn-window           ; Personal window utilities
   :load-path "lisp/"
@@ -914,3 +916,10 @@
         (cons '("\\.rb\\'" nil "# frozen_string_literal: true\n") auto-insert-alist))
   (add-hook 'ruby-mode-hook 'auto-insert)
   (add-hook 'enh-ruby-mode-hook 'auto-insert))
+
+(use-package elm-mode
+  :ensure t
+  :init
+  (add-hook 'elm-mode-hook #'elm-oracle-setup-completion)
+  :config
+  (setq elm-format-on-save t))
