@@ -27,7 +27,7 @@
 
 (defconst sadhu-savefile-dir (expand-file-name "savefile" user-emacs-directory))
 
-;; (desktop-save-mode 1)
+;;(desktop-save-mode 1)
 (winner-mode 1)
 
 ;; the toolbar is just a waste of valuable screen estate
@@ -82,7 +82,7 @@
 ;; delete the selection with a keypress
 (delete-selection-mode t)
 
-(toggle-frame-maximized)
+;(toggle-frame-maximized)
 ;(setq ns-use-native-fullscreen nil)
 
 ;; store all backup and autosave files in the tmp dir
@@ -135,7 +135,7 @@
 (global-set-key (kbd "s--") 'text-scale-decrease)
 (global-set-key (kbd "s-0") 'text-scale-adjust)
 (global-set-key (kbd "C-M-f") 'toggle-frame-maximized)
-(global-set-key (kbd "s-f") 'counsel-grep-or-swiper)
+(global-set-key (kbd "s-f") 'swiper)
 ;; (global-set-key (kbd "s-t") 'counsel-projectile-find-file)
 (global-set-key (kbd "s-o") 'counsel-find-file)
 (global-set-key (kbd "s-s") 'save-buffer)
@@ -154,7 +154,8 @@
 (global-set-key (kbd "s-2") (lambda () (interactive)(split-window-vertically) (other-window 1)))
 (global-set-key (kbd "s-3") (lambda () (interactive)(split-window-horizontally) (other-window 1)))
 (global-set-key (kbd "s-l") 'goto-line)
-;; (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+;; (global-set-key (kbd "<escape>") 'keyboard-quit)
 
 ;; http://emacsredux.com/blog/2015/05/09/emacs-on-os-x/
 (setq insert-directory-program (executable-find "gls")
@@ -187,8 +188,6 @@
 (global-set-key (kbd "C-x C-c") 'save-buffers-kill-emacs-only-in-console)
 (global-set-key (kbd "C-z") 'suspend-frame-only-in-console)
 (global-set-key (kbd "C-x C-z") 'suspend-frame-only-in-console)
-
-(setq special-display-buffer-names '("*rspec-compilation*" "*guard*"))
 
 (setq initial-major-mode 'ruby-mode)
 (setq ruby-insert-encoding-magic-comment nil)
@@ -465,7 +464,6 @@
 
 (use-package exec-path-from-shell
   :ensure t
-  :defer t ; Hack to make elm-format work
   :config
   (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize)))
@@ -495,16 +493,16 @@
   (setq whitespace-line-column 80) ;; limit line length
   (setq whitespace-style '(face tabs empty trailing lines-tail)))
 
-;; (use-package enh-ruby-mode
-;;   :ensure t
-;;   :mode (("Appraisals\\'" . enh-ruby-mode)
-;;          ("\\(Rake\\|Thor\\|Guard\\|Gem\\|Cap\\|Vagrant\\|Berks\\|Pod\\|Puppet\\)file\\'" . enh-ruby-mode)
-;;          ("\\.\\(rb\\|rabl\\|ru\\|builder\\|rake\\|thor\\|gemspec\\|jbuilder\\)\\'" . enh-ruby-mode))
-;;   :interpreter "ruby"
-;;   :init
-;;   (progn
-;;     (setq enh-ruby-deep-indent-paren nil
-;;           enh-ruby-hanging-paren-deep-indent-level 2)))
+(use-package enh-ruby-mode
+  :ensure t
+  :mode (("Appraisals\\'" . enh-ruby-mode)
+         ("\\(Rake\\|Thor\\|Guard\\|Gem\\|Cap\\|Vagrant\\|Berks\\|Pod\\|Puppet\\)file\\'" . enh-ruby-mode)
+         ("\\.\\(rb\\|rabl\\|ru\\|builder\\|rake\\|thor\\|gemspec\\|jbuilder\\)\\'" . enh-ruby-mode))
+  :interpreter "ruby"
+  :init
+  (progn
+    (setq enh-ruby-deep-indent-paren nil
+          enh-ruby-hanging-paren-deep-indent-level 2)))
 
 ;; (use-package enh-ruby-mode
 ;;   :ensure t
@@ -572,7 +570,7 @@
   (("s-t" . rspec-toggle-spec-and-target)
    ("s-4 t" . rspec-find-spec-or-target-other-window))
   :config
-  (setq compilation-scroll-output t)
+  (setq compilation-scroll-output nil)
   (setq rspec-primary-source-dirs '("app")))
 
 (use-package minitest
@@ -677,8 +675,8 @@
 
 (use-package flycheck
   :ensure t
-  :config
-  (add-hook 'after-init-hook #'global-flycheck-mode))
+  :init
+  (global-flycheck-mode))
 
 (use-package flycheck-color-mode-line
   :ensure t
@@ -860,36 +858,49 @@
 (when (file-exists-p custom-file)
   (load custom-file))
 
-;; https://github.com/lunaryorn/swsnr.de/blob/master/_posts/2015-04-29-the-power-of-display-buffer-alist.md
-;; Configure `display-buffer' behaviour for some special buffers.
-;; (setq
-;;  display-buffer-alist
-;;  `(
-;;    ;; Put REPLs and error lists into the bottom side window
-;;    (,(rx bos
-;;          (or "*Help"                         ; Help buffers
-;;              "*Warnings*"                    ; Emacs warnings
-;;              "*Compile-Log*"                 ; Emacs byte compiler log
-;;              "*compilation"                  ; Compilation buffers
-;;              "*Rubocop"
-;;              "*rspec-compilation"            ; Rspec compilation buffers
-;;              "*Flycheck errors*"             ; Flycheck error list
-;;              "*shell"                        ; Shell window
-;;              "*sbt"                          ; SBT REPL and compilation buffer
-;;              "*ensime-update*"               ; Server update from Ensime
-;;              "*SQL"                          ; SQL REPL
-;;              "*Cargo"                        ; Cargo process buffers
-;;              (and (1+ nonl) " output*")      ; AUCTeX command output
-;;              ))
-;;     (display-buffer-reuse-window
-;;      display-buffer-in-side-window)
-;;     (side            . bottom)
-;;     (reusable-frames . visible)
-;;     (window-height   . 0.33))
-;;    ;; Let `display-buffer' reuse visible frames for all buffers.  This must
-;;    ;; be the last entry in `display-buffer-alist', because it overrides any
-;;    ;; later entry with more specific actions.
-;;    ("." nil (reusable-frames . visible))))
+(defun multiple-monitors()
+  (interactive)
+  (setq display-buffer-alist nil)
+  (setq special-display-buffer-names '("*rspec-compilation*" "*guard*")))
+
+(defun single-monitor()
+  (interactive)
+  ;; https://github.com/lunaryorn/swsnr.de/blob/master/_posts/2015-04-29-the-power-of-display-buffer-alist.md
+  ;; Configure `display-buffer' behaviour for some special buffers.
+  (setq
+   display-buffer-alist
+   `(
+     ;; Put REPLs and error lists into the bottom side window
+     (,(rx bos
+           (or "*Help"                         ; Help buffers
+               "*Warnings*"                    ; Emacs warnings
+               "*Compile-Log*"                 ; Emacs byte compiler log
+               "*compilation"                  ; Compilation buffers
+               "*Rubocop"
+               "*rspec-compilation*"           ; Rspec compilation buffers
+               "*Flycheck errors*"             ; Flycheck error list
+               "*shell"                        ; Shell window
+               "*sbt"                          ; SBT REPL and compilation buffer
+               "*ensime-update*"               ; Server update from Ensime
+               "*SQL"                          ; SQL REPL
+               "*Cargo"                        ; Cargo process buffers
+               (and (1+ nonl) " output*")      ; AUCTeX command output
+               ))
+      (display-buffer-reuse-window
+       display-buffer-in-side-window)
+      (side            . bottom)
+      (reusable-frames . visible)
+      (window-height   . 0.33))
+     ;; Let `display-buffer' reuse visible frames for all buffers.  This must
+     ;; be the last entry in `display-buffer-alist', because it overrides any
+     ;; later entry with more specific actions.
+     ("." nil (reusable-frames . visible))))
+  )
+
+(setq multiple-monitors t)
+(if multiple-monitors
+    (multiple-monitors)
+    (single-monitor))
 
 (use-package lunaryorn-window           ; Personal window utilities
   :load-path "lisp/"
@@ -914,6 +925,8 @@
   (setq auto-insert-query nil)
   (setq auto-insert-alist
         (cons '("\\.rb\\'" nil "# frozen_string_literal: true\n") auto-insert-alist))
+  (setq auto-insert-alist
+        (cons '("Gemfile" nil "source 'https://rubygems.org'\n\n") auto-insert-alist))
   (add-hook 'ruby-mode-hook 'auto-insert)
   (add-hook 'enh-ruby-mode-hook 'auto-insert))
 
@@ -923,3 +936,10 @@
   (add-hook 'elm-mode-hook #'elm-oracle-setup-completion)
   :config
   (setq elm-format-on-save t))
+
+(use-package yasnippet
+  :ensure t
+  :init
+  (yas-global-mode 1)
+  :config
+  (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
