@@ -53,6 +53,7 @@
 ;;       scroll-preserve-screen-position 1)
 
 ;; mode line settings
+
 (line-number-mode t)
 (column-number-mode t)
 (size-indication-mode t)
@@ -81,6 +82,8 @@
 
 ;; delete the selection with a keypress
 (delete-selection-mode t)
+
+
 
 ;(toggle-frame-maximized)
 ;(setq ns-use-native-fullscreen nil)
@@ -151,8 +154,11 @@
 (global-set-key (kbd "s-b") 'ivy-switch-buffer)
 (global-set-key (kbd "s-`") 'other-frame)
 (global-set-key (kbd "s-1") 'delete-other-windows)
+(global-set-key (kbd "s-k s-w") 'delete-other-windows)
 (global-set-key (kbd "s-2") (lambda () (interactive)(split-window-vertically) (other-window 1)))
 (global-set-key (kbd "s-3") (lambda () (interactive)(split-window-horizontally) (other-window 1)))
+(global-set-key (kbd "s-\\") (lambda () (interactive)(split-window-horizontally) (other-window 1)))
+(global-set-key (kbd "s-k s-\\") (lambda () (interactive)(split-window-vertically) (other-window 1)))
 (global-set-key (kbd "s-l") 'goto-line)
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 ;; (global-set-key (kbd "<escape>") 'keyboard-quit)
@@ -237,14 +243,17 @@
   (global-set-key (kbd "C-c C-r") 'ivy-resume)
   (global-set-key (kbd "<f6>") 'ivy-resume)
   (global-set-key (kbd "M-x") 'counsel-M-x)
-  (global-set-key (kbd "C-x C-f") 'counsel-find-file))
+  (global-set-key (kbd "C-x C-f") 'counsel-find-file)
+  (define-key ivy-minibuffer-map (kbd "C-o") 'ivy-occur)
+  (define-key isearch-mode-map (kbd "C-o") 'isearch-occur)
+  (define-key ivy-occur-grep-mode-map (kbd "e") 'ivy-wgrep-change-to-wgrep-mode))
 
 (use-package wgrep
   :ensure t)
 
-(use-package spacemacs-common
-  :ensure spacemacs-theme
-  :config (load-theme 'spacemacs-dark t))
+;; (use-package spacemacs-common
+;;   :ensure spacemacs-theme
+;;   :config (load-theme 'spacemacs-dark t))
 
 ;; (use-package spacemacs-common
 ;;     :ensure spacemacs-theme
@@ -304,7 +313,10 @@
   :ensure t
   :bind
   (("C-x g" . magit-status)
-   ("C-M-<tab>" . magit-section-cycle)))
+   ("s-m" . magit-status)
+   ("C-M-<tab>" . magit-section-cycle))
+  :config
+  (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
 
 (use-package git-timemachine
   :ensure t
@@ -315,10 +327,38 @@
 ;;   :after magit
 ;;   :config (magithub-feature-autoinject t))
 
-(use-package spaceline-config
-  :ensure spaceline
+;; (use-package spaceline-config
+;;   :ensure spaceline
+;;   :config
+;;   (spaceline-emacs-theme))
+
+;; (use-package doom-modeline
+;;       :ensure t
+;;       :defer t
+;;       :hook (after-init . doom-modeline-init))
+
+(use-package solarized-theme
+  :ensure t
   :config
-  (spaceline-emacs-theme))
+  (load-theme 'solarized-light t)
+  (let ((line (face-attribute 'mode-line :underline)))
+    (set-face-attribute 'mode-line          nil :overline   line)
+    (set-face-attribute 'mode-line-inactive nil :overline   line)
+    (set-face-attribute 'mode-line-inactive nil :underline  line)
+    (set-face-attribute 'mode-line          nil :box        nil)
+    (set-face-attribute 'mode-line-inactive nil :box        nil)
+    (set-face-attribute 'mode-line-inactive nil :background "#f9f2d9")))
+
+(use-package moody
+  :ensure t
+  :config
+  (setq x-underline-at-descent-line t)
+  (moody-replace-mode-line-buffer-identification)
+  (moody-replace-vc-mode))
+
+(use-package minions
+  :ensure t
+  :config (minions-mode 1))
 
 (use-package github-browse-file
   :ensure t)
@@ -558,8 +598,13 @@
   :ensure t
   :init (setq rubocop-keymap-prefix (kbd "s-R"))
   :config
+  (defun rubocop-autocorrect-current-file-silent ()
+    (save-window-excursion (rubocop-autocorrect-current-file)))
   (add-hook 'enh-ruby-mode-hook #'rubocop-mode)
-  (add-hook 'ruby-mode-hook #'rubocop-mode))
+  (add-hook 'ruby-mode-hook #'rubocop-mode)
+  ;; (add-hook 'enh-ruby-mode-hook (lambda()
+  ;;                                 (add-hook 'before-save-hook 'rubocop-autocorrect-current-file-silent nil t)))
+  )
 
 (use-package rspec-mode
   :ensure t
@@ -736,7 +781,7 @@
          ;; ("s-r" . crux-recentf-find-file)
          ("s-j" . crux-top-join-line)
          ("C-^" . crux-top-join-line)
-         ("s-k" . crux-kill-whole-line)
+         ;; ("s-k" . crux-kill-whole-line)
          ("C-<backspace>" . crux-kill-line-backwards)
          ;;("s-o" . crux-smart-open-line-above)
          ([remap move-beginning-of-line] . crux-move-beginning-of-line)
@@ -752,56 +797,78 @@
 
 (use-package treemacs
   :ensure t
+  :defer t
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
   :config
-  (setq treemacs-follow-after-init          t
-          treemacs-width                      35
+  (progn
+    (setq treemacs-collapse-dirs              (if (executable-find "python") 3 0)
+          treemacs-deferred-git-apply-delay   0.5
+          treemacs-display-in-side-window     t
+          treemacs-file-event-delay           5000
+          treemacs-file-follow-delay          0.2
+          treemacs-follow-after-init          t
+          treemacs-follow-recenter-distance   0.1
+          treemacs-git-command-pipe           ""
+          treemacs-goto-tag-strategy          'refetch-index
           treemacs-indentation                2
-          treemacs-git-integration            t
-          treemacs-collapse-dirs              3
-          treemacs-silent-refresh             nil
-          treemacs-change-root-without-asking nil
-          treemacs-sorting                    'alphabetic-desc
-          treemacs-show-hidden-files          t
-          treemacs-never-persist              nil
+          treemacs-indentation-string         " "
           treemacs-is-never-other-window      nil
-          treemacs-goto-tag-strategy          'refetch-index)
-  (treemacs-follow-mode t)
-  (treemacs-filewatch-mode t)
+          treemacs-max-git-entries            5000
+          treemacs-no-png-images              nil
+          treemacs-no-delete-other-windows    t
+          treemacs-project-follow-cleanup     nil
+          treemacs-persist-file               (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+          treemacs-recenter-after-file-follow nil
+          treemacs-recenter-after-tag-follow  nil
+          treemacs-show-cursor                nil
+          treemacs-show-hidden-files          t
+          treemacs-silent-filewatch           nil
+          treemacs-silent-refresh             nil
+          treemacs-sorting                    'alphabetic-desc
+          treemacs-space-between-root-nodes   t
+          treemacs-tag-follow-cleanup         t
+          treemacs-tag-follow-delay           1.5
+          treemacs-width                      35)
+
+    ;; The default width and height of the icons is 22 pixels. If you are
+    ;; using a Hi-DPI display, uncomment this to double the icon size.
+    ;;(treemacs-resize-icons 44)
+
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-fringe-indicator-mode t)
+    (pcase (cons (not (null (executable-find "git")))
+                 (not (null (executable-find "python3"))))
+      (`(t . t)
+       (treemacs-git-mode 'deferred))
+      (`(t . _)
+       (treemacs-git-mode 'simple))))
   :bind
   (:map global-map
         ("M-0"       . treemacs-select-window)
         ("C-x t 1"   . treemacs-delete-other-windows)
-        ([f8]        . treemacs)
+        ("C-x t t"   . treemacs)
         ("C-x t B"   . treemacs-bookmark)
         ("C-x t C-t" . treemacs-find-file)
         ("C-x t M-t" . treemacs-find-tag)))
-
-  ;; :bind
-  ;; (:map global-map
-  ;;       ("s-t t"  . treemacs-toggle)
-  ;;       ("M-0"    . treemacs-select-window)
-  ;;       ("C-c 1"  . treemacs-delete-other-windows)
-  ;;       ("s-t c"  . treemacs)
-  ;;       ("s-t f"  . treemacs-find-file)))
 
 (use-package treemacs-projectile
   :after treemacs projectile
   :ensure t)
 
-;; (use-package treemacs-projectile
+;; (use-package iedit
 ;;   :ensure t
-;;   :config
-;;   (setq treemacs-header-function #'treemacs-projectile-create-header)
-;;   :bind (:map global-map
-;;               ([f8]  . treemacs-projectile-toggle)))
+;;   :bind ("C-;" . iedit-mode))
 
 (use-package multiple-cursors
   :ensure t
-  :bind (("C-S-c C-S-c" . mc/edit-lines)
+  :bind* (("C-S-c C-S-c" . mc/edit-lines)
          ("s-d" . mc/mark-next-like-this)
          ;;("s-D" . mc/skip-to-next-like-this)
          ("C-<" . mc/mark-previous-like-this)
-         ("C-c C-<" . mc/mark-all-like-this)
+         ("C-s-g" . mc/mark-all-like-this)
          ("C-S-<mouse-1>" . mc/add-cursor-on-click)))
 
 
@@ -936,6 +1003,9 @@
   (add-hook 'elm-mode-hook #'elm-oracle-setup-completion)
   :config
   (setq elm-format-on-save t))
+
+(use-package haskell-mode
+  :ensure t)
 
 (use-package yasnippet
   :ensure t
