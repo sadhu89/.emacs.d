@@ -196,6 +196,8 @@
 (global-set-key (kbd "C-x C-z") 'suspend-frame-only-in-console)
 
 (setq initial-major-mode 'ruby-mode)
+;; (setq initial-major-mode 'enh-ruby-mode)
+;; (setq initial-major-mode 'text-mode)
 (setq ruby-insert-encoding-magic-comment nil)
 (setq enh-ruby-add-encoding-comment-on-save nil)
 
@@ -237,7 +239,9 @@
   (ivy-mode 1)
   (setq ivy-use-virtual-buffers t)
   (setq counsel-grep-base-command
- "rg -i -M 120 --no-heading --line-number --color never '%s' %s")
+        "rg -i -M 120 --no-heading --line-number --color never '%s' %s")
+  (setq ivy-use-selectable-prompt t)
+  (setq ivy-magic-slash-non-match-action 'ivy-magic-slash-non-match-create)
   ;(global-set-key (kbd "C-r") 'swiper)
   ;(global-set-key "\C-s" 'counsel-grep-or-swiper)
   (global-set-key (kbd "C-c C-r") 'ivy-resume)
@@ -245,6 +249,9 @@
   (global-set-key (kbd "M-x") 'counsel-M-x)
   (global-set-key (kbd "C-x C-f") 'counsel-find-file)
   (define-key ivy-minibuffer-map (kbd "C-o") 'ivy-occur)
+  (define-key ivy-minibuffer-map (kbd "C-s-j") 'ivy-immediate-done)
+  (define-key ivy-minibuffer-map (kbd "C-s-n") 'ivy-next-line-and-call)
+  (define-key ivy-minibuffer-map (kbd "C-s-p") 'ivy-previous-line-and-call)
   (define-key isearch-mode-map (kbd "C-o") 'isearch-occur)
   (define-key ivy-occur-grep-mode-map (kbd "e") 'ivy-wgrep-change-to-wgrep-mode))
 
@@ -721,18 +728,23 @@
 (use-package flycheck
   :ensure t
   :init
-  (global-flycheck-mode))
+  ;; (global-flycheck-mode))
+  (add-hook 'enh-ruby-mode-hook #'flycheck-mode))
 
-(use-package flycheck-color-mode-line
-  :ensure t
-  :config
-  (add-hook 'flycheck-mode-hook 'flycheck-color-mode-line-mode))
+;; (use-package flycheck-color-mode-line
+;;   :ensure t
+;;   :config
+;;   (add-hook 'flycheck-mode-hook 'flycheck-color-mode-line-mode))
 
-(use-package flycheck-pos-tip
-  :ensure t
-  :config
-  (eval-after-load 'flycheck
-    '(setq flycheck-display-errors-function #'flycheck-pos-tip-error-messages)))
+;; (use-package flycheck-pos-tip
+;;   :ensure t
+;;   :config
+;;   (eval-after-load 'flycheck
+;;     '(setq flycheck-display-errors-function #'flycheck-pos-tip-error-messages)))
+
+;; (use-package flycheck-pos-tip
+;;   :ensure t
+;;   :config)
 
 (use-package super-save
   :ensure t
@@ -1007,9 +1019,12 @@
 (use-package haskell-mode
   :ensure t)
 
-(use-package yasnippet
-  :ensure t
-  :init
-  (yas-global-mode 1)
-  :config
-  (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
+;; (use-package yasnippet
+;;   :ensure t
+;;   :init
+;;   (yas-global-mode 1)
+;;   :config
+;;   (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
+
+;; (use-package yasnippet-snippets
+;;   :ensure t)
