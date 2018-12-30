@@ -258,50 +258,6 @@
 (use-package wgrep
   :ensure t)
 
-;; (use-package spacemacs-common
-;;   :ensure spacemacs-theme
-;;   :config (load-theme 'spacemacs-dark t))
-
-;; (use-package spacemacs-common
-;;     :ensure spacemacs-theme
-;;     :config (load-theme 'spacemacs-dark t))
-
-;; (use-package zenburn-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'zenburn t))
-
-;; (use-package doom-themes
-;;   :ensure t
-;;   :config
-;;   (load-theme 'doom-one t))
-
-;; (use-package solarized-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'solarized-dark t))
-
-;; (use-package color-theme-sanityinc-tomorrow
-;;   :ensure t
-;;   :config
-;;   (load-theme 'sanityinc-tomorrow-eighties t))
-
-;; (use-package dracula-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'dracula t))
-
-;; (use-package monokai-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'monokai t))
-
-;; (use-package gruvbox-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'gruvbox-dark-medium t))
-
-
 (setq default-frame-alist '((font . "Source Code Pro-13")))
 ;(add-hook 'prog-mode-hook 'mac-auto-operator-composition-mode)
 ;(setq default-frame-alist '((font . "Fira Code-13")))
@@ -325,24 +281,12 @@
   :config
   (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
 
+(use-package forge
+  :ensure t)
+
 (use-package git-timemachine
   :ensure t
   :bind (("s-g" . git-timemachine)))
-
-;; (use-package magithub
-;;   :ensure t
-;;   :after magit
-;;   :config (magithub-feature-autoinject t))
-
-;; (use-package spaceline-config
-;;   :ensure spaceline
-;;   :config
-;;   (spaceline-emacs-theme))
-
-;; (use-package doom-modeline
-;;       :ensure t
-;;       :defer t
-;;       :hook (after-init . doom-modeline-init))
 
 (use-package solarized-theme
   :ensure t
@@ -731,21 +675,6 @@
   ;; (global-flycheck-mode))
   (add-hook 'enh-ruby-mode-hook #'flycheck-mode))
 
-;; (use-package flycheck-color-mode-line
-;;   :ensure t
-;;   :config
-;;   (add-hook 'flycheck-mode-hook 'flycheck-color-mode-line-mode))
-
-;; (use-package flycheck-pos-tip
-;;   :ensure t
-;;   :config
-;;   (eval-after-load 'flycheck
-;;     '(setq flycheck-display-errors-function #'flycheck-pos-tip-error-messages)))
-
-;; (use-package flycheck-pos-tip
-;;   :ensure t
-;;   :config)
-
 (use-package super-save
   :ensure t
   :config
@@ -803,76 +732,9 @@
          ("C-c s" . crux-ispell-word-then-abbrev)
          ("C-c b" . crux-switch-to-previous-buffer)))
 
-;; (use-package transpose-frame
-;;   :ensure t
-;;   :bind ("s-t" . transpose-frame))
-
-(use-package treemacs
+(use-package iedit
   :ensure t
-  :defer t
-  :init
-  (with-eval-after-load 'winum
-    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
-  :config
-  (progn
-    (setq treemacs-collapse-dirs              (if (executable-find "python") 3 0)
-          treemacs-deferred-git-apply-delay   0.5
-          treemacs-display-in-side-window     t
-          treemacs-file-event-delay           5000
-          treemacs-file-follow-delay          0.2
-          treemacs-follow-after-init          t
-          treemacs-follow-recenter-distance   0.1
-          treemacs-git-command-pipe           ""
-          treemacs-goto-tag-strategy          'refetch-index
-          treemacs-indentation                2
-          treemacs-indentation-string         " "
-          treemacs-is-never-other-window      nil
-          treemacs-max-git-entries            5000
-          treemacs-no-png-images              nil
-          treemacs-no-delete-other-windows    t
-          treemacs-project-follow-cleanup     nil
-          treemacs-persist-file               (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
-          treemacs-recenter-after-file-follow nil
-          treemacs-recenter-after-tag-follow  nil
-          treemacs-show-cursor                nil
-          treemacs-show-hidden-files          t
-          treemacs-silent-filewatch           nil
-          treemacs-silent-refresh             nil
-          treemacs-sorting                    'alphabetic-desc
-          treemacs-space-between-root-nodes   t
-          treemacs-tag-follow-cleanup         t
-          treemacs-tag-follow-delay           1.5
-          treemacs-width                      35)
-
-    ;; The default width and height of the icons is 22 pixels. If you are
-    ;; using a Hi-DPI display, uncomment this to double the icon size.
-    ;;(treemacs-resize-icons 44)
-
-    (treemacs-follow-mode t)
-    (treemacs-filewatch-mode t)
-    (treemacs-fringe-indicator-mode t)
-    (pcase (cons (not (null (executable-find "git")))
-                 (not (null (executable-find "python3"))))
-      (`(t . t)
-       (treemacs-git-mode 'deferred))
-      (`(t . _)
-       (treemacs-git-mode 'simple))))
-  :bind
-  (:map global-map
-        ("M-0"       . treemacs-select-window)
-        ("C-x t 1"   . treemacs-delete-other-windows)
-        ("C-x t t"   . treemacs)
-        ("C-x t B"   . treemacs-bookmark)
-        ("C-x t C-t" . treemacs-find-file)
-        ("C-x t M-t" . treemacs-find-tag)))
-
-(use-package treemacs-projectile
-  :after treemacs projectile
-  :ensure t)
-
-;; (use-package iedit
-;;   :ensure t
-;;   :bind ("C-;" . iedit-mode))
+  :bind ("C-;" . iedit-mode))
 
 (use-package multiple-cursors
   :ensure t
@@ -883,22 +745,13 @@
          ("C-s-g" . mc/mark-all-like-this)
          ("C-S-<mouse-1>" . mc/add-cursor-on-click)))
 
-
-(use-package cliphist
-  :ensure t
-  :config
-  (setq cliphist-use-ivy t)
-  :bind* ("M-y" . cliphist-paste-item))
-
-(use-package multi-term
-  :ensure t
-  :bind ("C-c t" . multi-term))
-
 (use-package dumb-jump
   :ensure t
   :init (global-unset-key (kbd "s-g"))
   :bind (("s-g o" . dumb-jump-go-other-window)
+         ("s-g o" . dumb-jump-go-other-window)
          ("s-g j" . dumb-jump-go)
+         ("<f12>" . dumb-jump-go)
          ("s-g i" . dumb-jump-go-prompt)
          ("s-g x" . dumb-jump-go-prefer-external)
          ("s-g z" . dumb-jump-go-prefer-external-other-window))
@@ -913,23 +766,6 @@
 (use-package free-keys
   :ensure t
   :init (setq free-keys-modifiers '("" "C" "M" "C-M" "s")))
-
-;;Sonic Pi
-;; (use-package sonic-pi
-;;   :ensure t
-;;   :config
-;;   (setq sonic-pi-path "/Users/sadhu/Developer/sonic-pi/")
-;;   (setq sonic-pi-server-bin             "app/server/ruby/bin/sonic-pi-server.rb")
-;;   (setq sonic-pi-compile-extensions-bin "app/server/ruby/bin/compile-extensions.rb"))
-
-;; (use-package dash
-;;   :ensure t)
-
-;; (use-package osc
-;;   :ensure t)
-
-;; (use-package highlight
-;;   :ensure t)
 
 ;; config changes made through the customize UI will be stored here
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
@@ -976,7 +812,7 @@
      ("." nil (reusable-frames . visible))))
   )
 
-(setq multiple-monitors t)
+(setq multiple-monitors nil)
 (if multiple-monitors
     (multiple-monitors)
     (single-monitor))
@@ -1028,3 +864,44 @@
 
 ;; (use-package yasnippet-snippets
 ;;   :ensure t)
+(use-package direx
+  :ensure t
+  :bind (("C-x C-J" . 'direx:jump-to-directory)
+         ("C-x C-j" . 'direx-project:jump-to-project-root))
+  :init (setq direx:closed-icon " ▶ "
+	      direx:open-icon " ▼ "))
+
+(eval-after-load "term"
+  '(define-key term-raw-map (kbd "s-v") 'term-paste))
+
+(defun oleh-term-exec-hook ()
+  (let* ((buff (current-buffer))
+         (proc (get-buffer-process buff)))
+    (set-process-sentinel
+     proc
+     `(lambda (process event)
+        (if (string= event "finished\n")
+            (kill-buffer ,buff))))))
+
+(add-hook 'term-exec-hook 'oleh-term-exec-hook)
+
+(defun terminal ()
+  "Switch to terminal. Launch if nonexistent."
+  (interactive)
+  (if (get-buffer "*ansi-term*")
+      (switch-to-buffer "*ansi-term*")
+    (ansi-term "/bin/bash"))
+  (get-buffer-process "*ansi-term*"))
+
+(defalias 'tt 'terminal)
+
+(defun named-term (name)
+  (interactive "sName: ")
+  (ansi-term "/bin/bash" name))
+
+(global-set-key (kbd "C-t") 'terminal)
+
+(use-package org-bullets
+  :ensure t
+  :commands (org-bullets-mode)
+  :init (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
