@@ -195,9 +195,9 @@
 (global-set-key (kbd "C-z") 'suspend-frame-only-in-console)
 (global-set-key (kbd "C-x C-z") 'suspend-frame-only-in-console)
 
-(setq initial-major-mode 'ruby-mode)
-;; (setq initial-major-mode 'enh-ruby-mode)
-;; (setq initial-major-mode 'text-mode)
+;; (setq initial-major-mode 'ruby-mode)
+;;(setq initial-major-mode 'enh-ruby-mode)
+(setq initial-major-mode 'text-mode)
 (setq ruby-insert-encoding-magic-comment nil)
 (setq enh-ruby-add-encoding-comment-on-save nil)
 
@@ -484,16 +484,16 @@
   (setq whitespace-line-column 80) ;; limit line length
   (setq whitespace-style '(face tabs empty trailing lines-tail)))
 
-(use-package enh-ruby-mode
-  :ensure t
-  :mode (("Appraisals\\'" . enh-ruby-mode)
-         ("\\(Rake\\|Thor\\|Guard\\|Gem\\|Cap\\|Vagrant\\|Berks\\|Pod\\|Puppet\\)file\\'" . enh-ruby-mode)
-         ("\\.\\(rb\\|rabl\\|ru\\|builder\\|rake\\|thor\\|gemspec\\|jbuilder\\)\\'" . enh-ruby-mode))
-  :interpreter "ruby"
-  :init
-  (progn
-    (setq enh-ruby-deep-indent-paren nil
-          enh-ruby-hanging-paren-deep-indent-level 2)))
+;; (use-package enh-ruby-mode
+;;   :ensure t
+;;   :mode (("Appraisals\\'" . enh-ruby-mode)
+;;          ("\\(Rake\\|Thor\\|Guard\\|Gem\\|Cap\\|Vagrant\\|Berks\\|Pod\\|Puppet\\)file\\'" . enh-ruby-mode)
+;;          ("\\.\\(rb\\|rabl\\|ru\\|builder\\|rake\\|thor\\|gemspec\\|jbuilder\\)\\'" . enh-ruby-mode))
+;;   :interpreter "ruby"
+;;   :init
+;;   (progn
+;;     (setq enh-ruby-deep-indent-paren nil
+;;           enh-ruby-hanging-paren-deep-indent-level 2)))
 
 ;; (use-package enh-ruby-mode
 ;;   :ensure t
@@ -559,15 +559,16 @@
 
 (use-package rspec-mode
   :ensure t
-  :init (setq rspec-key-command-prefix (kbd "s-r"))
+  :init (setq rspec-key-command-prefix (kbd "s-R"))
   :bind*
-  (("s-r r" . rspec-rerun))
+  (("s-r" . rspec-rerun))
   :bind
   (("s-t" . rspec-toggle-spec-and-target)
    ("s-4 t" . rspec-find-spec-or-target-other-window))
   :config
   (setq compilation-scroll-output nil)
-  (setq rspec-primary-source-dirs '("app")))
+  (setq rspec-primary-source-dirs '("app" "lib")))
+  ;; (setq rspec-primary-source-dirs '("app")))
 
 (use-package minitest
   :ensure t
@@ -650,7 +651,8 @@
   :bind (("TAB" . company-indent-or-complete-common))
   :config
   (global-company-mode)
-  (add-to-list 'company-backends 'company-elm))
+  (add-to-list 'company-backends 'company-elm)
+  (setq company-dabbrev-code-everywhere t))
 
 (use-package hl-todo
   :ensure t
@@ -672,8 +674,7 @@
 (use-package flycheck
   :ensure t
   :init
-  ;; (global-flycheck-mode))
-  (add-hook 'enh-ruby-mode-hook #'flycheck-mode))
+  (global-flycheck-mode))
 
 (use-package super-save
   :ensure t
@@ -722,7 +723,7 @@
          ;; ("s-r" . crux-recentf-find-file)
          ("s-j" . crux-top-join-line)
          ("C-^" . crux-top-join-line)
-         ;; ("s-k" . crux-kill-whole-line)
+         ("s-k" . crux-kill-whole-line)
          ("C-<backspace>" . crux-kill-line-backwards)
          ;;("s-o" . crux-smart-open-line-above)
          ([remap move-beginning-of-line] . crux-move-beginning-of-line)
@@ -731,6 +732,7 @@
          ([remap kill-whole-line] . crux-kill-whole-line)
          ("C-c s" . crux-ispell-word-then-abbrev)
          ("C-c b" . crux-switch-to-previous-buffer)))
+
 
 (use-package iedit
   :ensure t
@@ -900,8 +902,3 @@
   (ansi-term "/bin/bash" name))
 
 (global-set-key (kbd "C-t") 'terminal)
-
-(use-package org-bullets
-  :ensure t
-  :commands (org-bullets-mode)
-  :init (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
