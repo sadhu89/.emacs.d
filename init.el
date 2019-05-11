@@ -484,6 +484,9 @@
   (setq whitespace-line-column 80) ;; limit line length
   (setq whitespace-style '(face tabs empty trailing lines-tail)))
 
+(use-package elixir-mode
+  :ensure t)
+
 ;; (use-package enh-ruby-mode
 ;;   :ensure t
 ;;   :mode (("Appraisals\\'" . enh-ruby-mode)
@@ -703,8 +706,24 @@
   (setq undo-tree-auto-save-history t)
   (global-undo-tree-mode))
 
+(defun terminal ()
+  "Switch to terminal. Launch if nonexistent."
+  (interactive)
+  (if (get-buffer "*ansi-term*")
+      (switch-to-buffer "*ansi-term*")
+    (ansi-term "/bin/bash"))
+  (get-buffer-process "*ansi-term*"))
+
+(defalias 'tt 'terminal)
+
+(defun named-term (name)
+  (interactive "sName: ")
+  (ansi-term "/bin/bash" name))
+
 (use-package crux
   :ensure t
+  :bind*
+  (("C-t" . terminal))
   :bind (("C-c o" . crux-open-with)
          ("M-o" . crux-smart-open-line)
          ("C-c n" . crux-cleanup-buffer-or-region)
@@ -886,19 +905,3 @@
             (kill-buffer ,buff))))))
 
 (add-hook 'term-exec-hook 'oleh-term-exec-hook)
-
-(defun terminal ()
-  "Switch to terminal. Launch if nonexistent."
-  (interactive)
-  (if (get-buffer "*ansi-term*")
-      (switch-to-buffer "*ansi-term*")
-    (ansi-term "/bin/bash"))
-  (get-buffer-process "*ansi-term*"))
-
-(defalias 'tt 'terminal)
-
-(defun named-term (name)
-  (interactive "sName: ")
-  (ansi-term "/bin/bash" name))
-
-(global-set-key (kbd "C-t") 'terminal)
