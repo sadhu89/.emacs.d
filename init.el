@@ -483,6 +483,9 @@
   (setq whitespace-line-column 80) ;; limit line length
   (setq whitespace-style '(face tabs empty trailing lines-tail)))
 
+(use-package elixir-mode
+  :ensure t)
+
 ;; (use-package enh-ruby-mode
 ;;   :ensure t
 ;;   :mode (("Appraisals\\'" . enh-ruby-mode)
@@ -706,6 +709,8 @@
 
 (use-package crux
   :ensure t
+  :bind*
+  (("C-t" . terminal))
   :bind (("C-c o" . crux-open-with)
          ("M-o" . crux-smart-open-line)
          ("C-c n" . crux-cleanup-buffer-or-region)
