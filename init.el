@@ -80,6 +80,9 @@
 ;; Newline at end of file
 (setq require-final-newline t)
 
+;; Wrap lines at 80 characters
+(setq-default fill-column 80)
+
 ;; delete the selection with a keypress
 (delete-selection-mode t)
 
@@ -154,19 +157,15 @@
 (global-set-key (kbd "s-b") 'ivy-switch-buffer)
 (global-set-key (kbd "s-`") 'other-frame)
 (global-set-key (kbd "s-1") 'delete-other-windows)
-(global-set-key (kbd "s-k s-w") 'delete-other-windows)
+(global-set-key (kbd "s-M-<return>") 'toggle-frame-maximized)
+;;(global-set-key (kbd "s-k s-w") 'delete-other-windows)
 (global-set-key (kbd "s-2") (lambda () (interactive)(split-window-vertically) (other-window 1)))
 (global-set-key (kbd "s-3") (lambda () (interactive)(split-window-horizontally) (other-window 1)))
 (global-set-key (kbd "s-\\") (lambda () (interactive)(split-window-horizontally) (other-window 1)))
-(global-set-key (kbd "s-k s-\\") (lambda () (interactive)(split-window-vertically) (other-window 1)))
+;;(global-set-key (kbd "s-k s-\\") (lambda () (interactive)(split-window-vertically) (other-window 1)))
 (global-set-key (kbd "s-l") 'goto-line)
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 ;; (global-set-key (kbd "<escape>") 'keyboard-quit)
-
-;; http://emacsredux.com/blog/2015/05/09/emacs-on-os-x/
-(setq insert-directory-program (executable-find "gls")
-      ;; https://oremacs.com/2015/01/13/dired-options/
-      dired-listing-switches "-laGh1v --group-directories-first")
 
 (define-key 'help-command (kbd "C-i") #'info-display-manual)
 
@@ -319,7 +318,7 @@
   :init
   (setq projectile-completion-system 'ivy)
   :config
-  (define-key projectile-mode-map (kbd "C-s-p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "<C-s-268632080>") 'projectile-command-map)
   (projectile-global-mode +1)
   (setq projectile-switch-project-action 'projectile-dired))
 
@@ -549,8 +548,8 @@
   :ensure t
   :init (setq rubocop-keymap-prefix (kbd "s-R"))
   :config
-  (defun rubocop-autocorrect-current-file-silent ()
-    (save-window-excursion (rubocop-autocorrect-current-file)))
+  ;; (defun rubocop-autocorrect-current-file-silent ()
+  ;;   (save-window-excursion (rubocop-autocorrect-current-file)))
   (add-hook 'enh-ruby-mode-hook #'rubocop-mode)
   (add-hook 'ruby-mode-hook #'rubocop-mode)
   ;; (add-hook 'enh-ruby-mode-hook (lambda()
@@ -567,6 +566,8 @@
    ("s-4 t" . rspec-find-spec-or-target-other-window))
   :config
   (setq compilation-scroll-output nil)
+  (setq rspec-use-docker-when-possible t)
+  (setq rspec-docker-container "ci")
   (setq rspec-primary-source-dirs '("app" "lib")))
   ;; (setq rspec-primary-source-dirs '("app")))
 
@@ -814,7 +815,7 @@
      ("." nil (reusable-frames . visible))))
   )
 
-(setq multiple-monitors nil)
+(setq multiple-monitors t)
 (if multiple-monitors
     (multiple-monitors)
     (single-monitor))
@@ -902,3 +903,13 @@
   (ansi-term "/bin/bash" name))
 
 (global-set-key (kbd "C-t") 'terminal)
+
+;; http://emacsredux.com/blog/2015/05/09/emacs-on-os-x/
+(setq insert-directory-program (executable-find "gls")
+      ;; https://oremacs.com/2015/01/13/dired-options/
+      dired-listing-switches "-laGh1v --group-directories-first")
+
+(use-package default-text-scale
+  :ensure t
+  :bind (("s-=" . default-text-scale-increase)
+         ("s--" . default-text-scale-decrease)))
