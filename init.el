@@ -232,6 +232,43 @@
 (require 'use-package)
 (setq use-package-verbose t)
 
+;; (setq use-package-always-defer t
+;;       use-package-always-ensure t)
+
+;; From https://github.com/hlissner/doom-emacs/blob/develop/modules/completion/ivy/autoload/ivy.el
+
+(defvar +ivy-edit-functions nil
+  "A plist mapping ivy/counsel commands to commands that generate an editable
+results buffer.")
+
+(defun +ivy/woccur ()
+  "Invoke a wgrep buffer on the current ivy results, if supported."
+  (interactive)
+  (unless (window-minibuffer-p)
+    (user-error "No completion session is active"))
+  (require 'wgrep)
+  (let ((caller (ivy-state-caller ivy-last)))
+    (if-let* ((occur-fn (plist-get +ivy-edit-functions caller)))
+        (ivy-exit-with-action
+         (lambda (_) (funcall occur-fn)))
+      (if-let* ((occur-fn (plist-get ivy--occurs-list caller)))
+          (let ((buffer (generate-new-buffer
+                         (format "*ivy-occur%s \"%s\"*"
+                                 (if caller (concat " " (prin1-to-string caller)) "")
+                                 ivy-text))))
+            (with-current-buffer buffer
+              (let ((inhibit-read-only t))
+                (erase-buffer)
+                (funcall occur-fn))
+              (setf (ivy-state-text ivy-last) ivy-text)
+              (setq ivy-occur-last ivy-last)
+              (setq-local ivy--directory ivy--directory))
+            (ivy-exit-with-action
+             `(lambda (_)
+                (pop-to-buffer ,buffer)
+                (ivy-wgrep-change-to-wgrep-mode))))
+        (user-error "%S doesn't support wgrep" caller)))))
+
 (use-package counsel
   :ensure smex
   :config
@@ -248,6 +285,7 @@
   (global-set-key (kbd "M-x") 'counsel-M-x)
   (global-set-key (kbd "C-x C-f") 'counsel-find-file)
   (define-key ivy-minibuffer-map (kbd "C-o") 'ivy-occur)
+  (define-key ivy-minibuffer-map (kbd "C-c C-e") '+ivy/woccur)
   (define-key ivy-minibuffer-map (kbd "C-s-j") 'ivy-immediate-done)
   (define-key ivy-minibuffer-map (kbd "C-s-n") 'ivy-next-line-and-call)
   (define-key ivy-minibuffer-map (kbd "C-s-p") 'ivy-previous-line-and-call)
@@ -709,8 +747,8 @@
 
 (use-package crux
   :ensure t
-  :bind*
-  (("C-t" . terminal))
+  ;; :bind*
+  ;; (("C-t" . terminal))
   :bind (("C-c o" . crux-open-with)
          ("M-o" . crux-smart-open-line)
          ("C-c n" . crux-cleanup-buffer-or-region)
@@ -879,35 +917,35 @@
   :init (setq direx:closed-icon " ▶ "
 	      direx:open-icon " ▼ "))
 
-(eval-after-load "term"
-  '(define-key term-raw-map (kbd "s-v") 'term-paste))
+;; (eval-after-load "term"
+;;   '(define-key term-raw-map (kbd "s-v") 'term-paste))
 
-(defun oleh-term-exec-hook ()
-  (let* ((buff (current-buffer))
-         (proc (get-buffer-process buff)))
-    (set-process-sentinel
-     proc
-     `(lambda (process event)
-        (if (string= event "finished\n")
-            (kill-buffer ,buff))))))
+;; (defun oleh-term-exec-hook ()
+;;   (let* ((buff (current-buffer))
+;;          (proc (get-buffer-process buff)))
+;;     (set-process-sentinel
+;;      proc
+;;      `(lambda (process event)
+;;         (if (string= event "finished\n")
+;;             (kill-buffer ,buff))))))
 
-(add-hook 'term-exec-hook 'oleh-term-exec-hook)
+;; (add-hook 'term-exec-hook 'oleh-term-exec-hook)
 
-(defun terminal ()
-  "Switch to terminal. Launch if nonexistent."
-  (interactive)
-  (if (get-buffer "*ansi-term*")
-      (switch-to-buffer "*ansi-term*")
-    (ansi-term "/bin/bash"))
-  (get-buffer-process "*ansi-term*"))
+;; (defun terminal ()
+;;   "Switch to terminal. Launch if nonexistent."
+;;   (interactive)
+;;   (if (get-buffer "*ansi-term*")
+;;       (switch-to-buffer "*ansi-term*")
+;;     (ansi-term "/bin/bash"))
+;;   (get-buffer-process "*ansi-term*"))
 
-(defalias 'tt 'terminal)
+;; (defalias 'tt 'terminal)
 
-(defun named-term (name)
-  (interactive "sName: ")
-  (ansi-term "/bin/bash" name))
+;; (defun named-term (name)
+;;   (interactive "sName: ")
+;;   (ansi-term "/bin/bash" name))
 
-(global-set-key (kbd "C-t") 'terminal)
+;; (global-set-key (kbd "C-t") 'terminal)
 
 ;; http://emacsredux.com/blog/2015/05/09/emacs-on-os-x/
 (setq insert-directory-program (executable-find "gls")
@@ -918,3 +956,107 @@
   :ensure t
   :bind (("s-=" . default-text-scale-increase)
          ("s--" . default-text-scale-decrease)))
+
+(use-package git-messenger
+  :ensure t
+  :bind ("s-h" . git-messenger:popup-message)
+  :init
+  (setq git-messenger:show-detail t))
+
+(use-package vterm
+  :ensure t
+  :init
+  (add-to-list 'load-path "~/Developer/emacs-libvterm"))
+
+(use-package magit-todos
+  :ensure t
+  :config
+  (magit-todos-mode t))
+
+(use-package autorevert
+  :diminish
+  :hook (after-init . global-auto-revert-mode))
+
+;; Enable scala-mode and sbt-mode
+(use-package scala-mode
+  :ensure t
+  :mode "\\.s\\(cala\\|bt\\)$")
+
+(use-package sbt-mode
+  :ensure t
+  :commands sbt-start sbt-command
+  :config
+  ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+  ;; allows using SPACE when in the minibuffer
+  (substitute-key-definition
+   'minibuffer-complete-word
+   'self-insert-command
+   minibuffer-local-completion-map))
+
+(use-package lsp-mode
+  :ensure t
+  ;; Optional - enable lsp-mode automatically in scala files
+  :hook (scala-mode . lsp)
+  :config (setq lsp-prefer-flymake nil))
+
+(use-package lsp-ui
+  :ensure t)
+
+;; Add company-lsp backend for metals
+(use-package company-lsp
+  :ensure t)
+
+
+(defun doom-project-root (&optional dir)
+  "Return the project root of DIR (defaults to `default-directory').
+Returns nil if not in a project."
+  (let ((projectile-project-root (unless dir projectile-project-root))
+        projectile-require-project-root)
+    (projectile-project-root dir)))
+
+(defun +vterm/here (name arg)
+  "Open a terminal buffer in the current window at project root.
+If prefix ARG is non-nil, cd into `default-directory' instead of project root."
+  (interactive "P")
+  (when (eq major-mode 'vterm-mode)
+    (user-error "Already in a vterm buffer"))
+  (require 'vterm)
+  ;; This hack forces vterm to redraw, fixing strange artefacting in the tty.
+  (save-window-excursion
+    (pop-to-buffer "*scratch*"))
+  (let ((default-directory
+          (if arg
+              default-directory
+            (or (doom-project-root) default-directory))))
+    (named-term name)))
+
+(defun here-named-term(name)
+  (interactive "sName: ")
+  (+vterm/here name nil))
+
+(defun terminal ()
+  "Switch to terminal. Launch if nonexistent."
+  (interactive)
+  (if (get-buffer "*vterm*")
+      (switch-to-buffer "*vterm*")
+    (+vterm/here "vterm" nil))
+  (get-buffer-process "*vterm*"))
+
+(defun named-term (name)
+  (interactive "sName: ")
+  (let ((buffer (generate-new-buffer (concat "*" name "*"))))
+    (with-current-buffer buffer
+      (vterm-mode))
+    (switch-to-buffer buffer)))
+
+(global-set-key (kbd "C-t") 'terminal)
+(global-set-key (kbd "C-S-t") 'here-named-term)
+
+
+;; Remove after this is merged https://github.com/akermu/emacs-libvterm/pull/70
+(defun vterm-send-return ()
+  "Sends C-m to the libvterm."
+  (interactive)
+  (process-send-string vterm--process "\C-m"))
+
+(define-key vterm-mode-map [return]                    #'vterm-send-return)
