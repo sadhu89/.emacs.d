@@ -608,7 +608,7 @@ results buffer.")
   :config
   (setq compilation-scroll-output nil)
   (setq rspec-use-docker-when-possible t)
-  (setq rspec-docker-container "ci")
+  (setq rspec-docker-container "dev")
   (setq rspec-primary-source-dirs '("app" "lib")))
   ;; (setq rspec-primary-source-dirs '("app")))
 
@@ -791,17 +791,27 @@ results buffer.")
          ("C-s-g" . mc/mark-all-like-this)
          ("C-S-<mouse-1>" . mc/add-cursor-on-click)))
 
-(use-package dumb-jump
+;; (use-package dumb-jump
+;;   :ensure t
+;;   :init (global-unset-key (kbd "s-g"))
+;;   :bind (("s-g o" . dumb-jump-go-other-window)
+;;          ("s-g o" . dumb-jump-go-other-window)
+;;          ("s-g j" . dumb-jump-go)
+;;          ("<f12>" . dumb-jump-go)
+;;          ("s-g i" . dumb-jump-go-prompt)
+;;          ("s-g x" . dumb-jump-go-prefer-external)
+;;          ("s-g z" . dumb-jump-go-prefer-external-other-window))
+;;   :config (setq dumb-jump-selector 'ivy))
+
+(use-package ag
+  :ensure t)
+
+(use-package smart-jump
   :ensure t
   :init (global-unset-key (kbd "s-g"))
-  :bind (("s-g o" . dumb-jump-go-other-window)
-         ("s-g o" . dumb-jump-go-other-window)
-         ("s-g j" . dumb-jump-go)
-         ("<f12>" . dumb-jump-go)
-         ("s-g i" . dumb-jump-go-prompt)
-         ("s-g x" . dumb-jump-go-prefer-external)
-         ("s-g z" . dumb-jump-go-prefer-external-other-window))
-  :config (setq dumb-jump-selector 'ivy))
+  :config
+  (smart-jump-setup-default-registers)
+  :bind (("s-g o" . smart-jump-go)))
 
 ;; temporarily highlight changes from yanking, etc
 (use-package volatile-highlights
@@ -901,12 +911,12 @@ results buffer.")
 (use-package haskell-mode
   :ensure t)
 
-;; (use-package yasnippet
-;;   :ensure t
-;;   :init
-;;   (yas-global-mode 1)
-;;   :config
-;;   (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
+(use-package yasnippet
+  :ensure t
+  :init
+  (yas-global-mode 1)
+  :config
+  (add-to-list 'yas-snippet-dirs (locate-user-emacs-file "snippets")))
 
 ;; (use-package yasnippet-snippets
 ;;   :ensure t)
@@ -995,8 +1005,9 @@ results buffer.")
 
 (use-package lsp-mode
   :ensure t
-  ;; Optional - enable lsp-mode automatically in scala files
-  :hook (scala-mode . lsp)
+  :hook
+  (scala-mode . lsp)
+  (ruby-mode . lsp)
   :config (setq lsp-prefer-flymake nil))
 
 (use-package lsp-ui
@@ -1060,3 +1071,55 @@ If prefix ARG is non-nil, cd into `default-directory' instead of project root."
   (process-send-string vterm--process "\C-m"))
 
 (define-key vterm-mode-map [return]                    #'vterm-send-return)
+(put 'magit-diff-edit-hunk-commit 'disabled nil)
+
+
+(use-package hydra
+  :ensure t)
+
+;; smerge source: https://ladicle.com/post/config/#smerge
+(use-package smerge-mode
+  :diminish
+  :preface
+  (with-eval-after-load 'hydra
+    (defhydra smerge-hydra
+      (:color pink :hint nil :post (smerge-auto-leave))
+      "
+^Move^       ^Keep^               ^Diff^                 ^Other^
+^^-----------^^-------------------^^---------------------^^-------
+_n_ext       _b_ase               _<_: upper/base        _C_ombine
+_p_rev       _u_pper              _=_: upper/lower       _r_esolve
+^^           _l_ower              _>_: base/lower        _k_ill current
+^^           _a_ll                _R_efine
+^^           _RET_: current       _E_diff
+"
+      ("n" smerge-next)
+      ("p" smerge-prev)
+      ("b" smerge-keep-base)
+      ("u" smerge-keep-upper)
+      ("l" smerge-keep-lower)
+      ("a" smerge-keep-all)
+      ("RET" smerge-keep-current)
+      ("\C-m" smerge-keep-current)
+      ("<" smerge-diff-base-upper)
+      ("=" smerge-diff-upper-lower)
+      (">" smerge-diff-base-lower)
+      ("R" smerge-refine)
+      ("E" smerge-ediff)
+      ("C" smerge-combine-with-next)
+      ("r" smerge-resolve)
+      ("k" smerge-kill-current)
+      ("ZZ" (lambda ()
+              (interactive)
+              (save-buffer)
+              (bury-buffer))
+       "Save and bury buffer" :color blue)
+      ("q" nil "cancel" :color blue)))
+  :hook ((find-file . (lambda ()
+                        (save-excursion
+                          (goto-char (point-min))
+                          (when (re-search-forward "^<<<<<<< " nil t)
+                            (smerge-mode 1)))))
+         (magit-diff-visit-file . (lambda ()
+                                    (when smerge-mode
+                                      (smerge-hydra/body))))))
