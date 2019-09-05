@@ -608,7 +608,7 @@ results buffer.")
   :config
   (setq compilation-scroll-output nil)
   (setq rspec-use-docker-when-possible t)
-  (setq rspec-docker-container "dev")
+  (setq rspec-docker-container "test")
   (setq rspec-primary-source-dirs '("app" "lib")))
   ;; (setq rspec-primary-source-dirs '("app")))
 
@@ -683,7 +683,12 @@ results buffer.")
   :ensure t)
 
 (use-package markdown-mode
-  :ensure t)
+  :ensure t
+  :bind
+  (("s-l" . markdown-live-preview-mode))
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode))
+  :init (setq markdown-command "/usr/local/bin/pandoc"))
 
 (use-package yaml-mode
   :ensure t)
@@ -1007,7 +1012,7 @@ results buffer.")
   :ensure t
   :hook
   (scala-mode . lsp)
-  (ruby-mode . lsp)
+  ;; (ruby-mode . lsp)
   :config (setq lsp-prefer-flymake nil))
 
 (use-package lsp-ui
@@ -1016,6 +1021,9 @@ results buffer.")
 ;; Add company-lsp backend for metals
 (use-package company-lsp
   :ensure t)
+
+;; (use-package ensime
+;;   :ensure t)
 
 
 (defun doom-project-root (&optional dir)
@@ -1123,3 +1131,15 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
          (magit-diff-visit-file . (lambda ()
                                     (when smerge-mode
                                       (smerge-hydra/body))))))
+
+(use-package restclient
+  :ensure t
+  :mode ("\\.\\(http\\|rest\\)$" . restclient-mode))
+
+(use-package company-restclient
+  :ensure t
+  :config
+  (add-to-list 'company-backends 'company-restclient))
+
+(use-package slim-mode
+  :ensure t)
