@@ -698,7 +698,8 @@ results buffer.")
   :bind (("TAB" . company-indent-or-complete-common))
   :config
   (global-company-mode)
-  (add-to-list 'company-backends 'company-elm)
+  ;; (add-to-list 'company-backends 'company-elm)
+  ;; (add-to-list 'company-backends 'company-lsp)
   (setq company-dabbrev-code-everywhere t))
 
 (use-package hl-todo
@@ -796,27 +797,27 @@ results buffer.")
          ("C-s-g" . mc/mark-all-like-this)
          ("C-S-<mouse-1>" . mc/add-cursor-on-click)))
 
-;; (use-package dumb-jump
-;;   :ensure t
-;;   :init (global-unset-key (kbd "s-g"))
-;;   :bind (("s-g o" . dumb-jump-go-other-window)
-;;          ("s-g o" . dumb-jump-go-other-window)
-;;          ("s-g j" . dumb-jump-go)
-;;          ("<f12>" . dumb-jump-go)
-;;          ("s-g i" . dumb-jump-go-prompt)
-;;          ("s-g x" . dumb-jump-go-prefer-external)
-;;          ("s-g z" . dumb-jump-go-prefer-external-other-window))
-;;   :config (setq dumb-jump-selector 'ivy))
+(use-package dumb-jump
+  :ensure t
+  :init (global-unset-key (kbd "s-g"))
+  :bind (("s-g o" . dumb-jump-go-other-window)
+         ("s-g o" . dumb-jump-go-other-window)
+         ("s-g j" . dumb-jump-go)
+         ("<f12>" . dumb-jump-go)
+         ("s-g i" . dumb-jump-go-prompt)
+         ("s-g x" . dumb-jump-go-prefer-external)
+         ("s-g z" . dumb-jump-go-prefer-external-other-window))
+  :config (setq dumb-jump-selector 'ivy))
 
 (use-package ag
   :ensure t)
 
-(use-package smart-jump
-  :ensure t
-  :init (global-unset-key (kbd "s-g"))
-  :config
-  (smart-jump-setup-default-registers)
-  :bind (("s-g o" . smart-jump-go)))
+;; (use-package smart-jump
+;;   :ensure t
+;;   :init (global-unset-key (kbd "s-g"))
+;;   :config
+;;   (smart-jump-setup-default-registers)
+;;   :bind (("s-g o" . smart-jump-go)))
 
 ;; temporarily highlight changes from yanking, etc
 (use-package volatile-highlights
@@ -1021,10 +1022,6 @@ results buffer.")
 ;; Add company-lsp backend for metals
 (use-package company-lsp
   :ensure t)
-
-;; (use-package ensime
-;;   :ensure t)
-
 
 (defun doom-project-root (&optional dir)
   "Return the project root of DIR (defaults to `default-directory').
