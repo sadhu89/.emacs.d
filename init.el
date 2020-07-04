@@ -126,17 +126,118 @@
 ;; align code in a pretty way
 (global-set-key (kbd "C-x \\") #'align-regexp)
 
+(defun delete-window-or-frame (&optional window frame force)
+  (interactive)
+  (if (= 1 (length (window-list frame)))
+      (delete-frame-or-kill-emacs)
+    (delete-window window)))
+
+(defun delete-frame-or-kill-emacs()
+  "Delete the selected frame.  If the last one, kill Emacs."
+  (interactive)
+  (condition-case nil (delete-frame) (error (kill-emacs))))
+
+(defun delete-current-line ()
+  "Delete (not kill) the current line."
+  (interactive)
+  (save-excursion
+    (delete-region
+     (progn (forward-visible-line 0) (point))
+     (progn (forward-visible-line 1) (point)))))
+
+(defun duplicate-current-line-or-region(arg)
+  (interactive "p")
+  (crux-duplicate-current-line-or-region arg)
+  (previous-line))
+
+   (defun goto-match-paren (arg)
+     "Go to the matching parenthesis if on parenthesis. Else go to the
+   opening parenthesis one level up."
+     (interactive "p")
+     (cond ((looking-at "\\s\(") (forward-list 1))
+           (t
+            (backward-char 1)
+            (cond ((looking-at "\\s\)")
+                   (forward-char 1) (backward-list 1))
+                  (t
+                   (while (not (looking-at "\\s("))
+                     (backward-char 1)
+                     (cond ((looking-at "\\s\)")
+                            (message "->> )")
+                            (forward-char 1)
+                            (backward-list 1)
+                            (backward-char 1)))
+                     ))))))
+
+(setq-default cursor-type '(bar . 1))
+(add-hook 'text-mode-hook #'blink-cursor-mode)
+(setq blink-cursor-interval .5)
+
 ;; OSX keybindings
-(global-set-key (kbd "s-q") 'save-buffers-kill-terminal)
+
+;; General
+(global-set-key (kbd "s-P") 'counsel-M-x) ;; Show command palette
+(global-set-key (kbd "<f1>") 'counsel-M-x)
+
+(global-set-key (kbd "s-p") 'counsel-projectile-find-file) ;; Quick open, Go to File
+(global-set-key (kbd "s-N") 'make-frame) ;; New window/instance
+(define-key global-map [remap delete-window] 'delete-window-or-frame) ;; Close window/instance
+(global-set-key (kbd "s-,") 'crux-find-user-init-file) ;; User Settings
+(global-unset-key (kbd "s-k"))
+(global-set-key (kbd "s-k s-s") 'counsel-descbinds)
+
+;; Basic Editing
+(global-set-key (kbd "s-x") 'kill-region) ;; Cut line(empty selection)
+(global-set-key (kbd "s-c") 'kill-ring-save) ;; Copy line(empty selection)
+(global-set-key (kbd "M-<down>") 'move-text-down) ;; Move line down
+(global-set-key (kbd "M-<up>") 'move-text-up) ;; Move line up
+(global-set-key (kbd "s-K") 'delete-current-line) ;; Delete line
+(global-set-key (kbd "s-<return>") 'crux-smart-open-line) ;; Insert line below
+(global-set-key (kbd "s-S-<return>") 'crux-smart-open-line-above) ;; Insert line above
+(global-set-key (kbd "M-S-<down>") 'crux-duplicate-current-line-or-region) ;; Copy line down
+(global-set-key (kbd "M-S-<up>") 'duplicate-current-line-or-region) ;; Copy line up
+(global-unset-key (kbd "s-|"))
+(global-set-key (kbd "s-|") 'goto-match-paren)
+(global-set-key (kbd "s-]") 'stupid-indent-line) ;; Indent line
+(global-set-key (kbd "s-[") 'stupid-outdent-line) ;; Outdent line
+(global-set-key (kbd "s-<left>") 'crux-move-beginning-of-line) ;; Go to beginning of line
+(global-set-key (kbd "s-<right>") 'move-end-of-line) ;; Go to end of line
+(global-set-key (kbd "M-s-“") 'yafolding-hide-element) ;; Fold all subregions
+(global-set-key (kbd "M-s-‘") 'yafolding-show-element) ;; Unfold subregions
+(global-set-key (kbd "s-k s-0") 'yafolding-hide-all) ;; Fold all regions
+(global-set-key (kbd "s-k s-j") 'yafolding-show-all) ;; Unfold all regions
+(global-set-key (kbd "s-k s-j") 'yafolding-show-all) ;; Unfold all regions
+(global-set-key (kbd "s-/") 'comment-line) ;; Toggle line comment
+
+;; Multi-cursor and Selection
+(global-unset-key (kbd "M-<down-mouse-1>"))
+(global-set-key (kbd "M-<mouse-1>") 'mc/add-cursor-on-click) ;; Insert cursor
+(global-set-key (kbd "M-s-<up>") 'mc/mark-previous-like-this) ;; Insert cursor above
+(global-set-key (kbd "M-s-<down>") 'mc/mark-next-like-this) ;; Insert cursor below
+(global-set-key (kbd "M-I") 'mc/edit-ends-of-lines) ;; Insert cursor below
+
+(global-set-key (kbd "<f12>") 'lsp-find-definition)
+(global-set-key (kbd "s-<down-mouse-1>") 'lsp-find-definition-mouse)
+(global-set-key (kbd "s-<mouse-1>") 'ignore)
+(global-set-key (kbd "S-<f12>") 'lsp-ui-peek-find-references)
+(global-set-key (kbd "s-.") 'lsp-execute-code-action)
+(global-set-key (kbd "M-<f12>") 'lsp-ui-peek-find-definitions)
+
+
+
+
+;; Others
+(global-set-key (kbd "S-<SPC>") 'set-mark-command) ;; Insert cursor below
 (global-set-key (kbd "s-v") 'yank)
-(global-set-key (kbd "s-c") 'kill-ring-save)
+
+(global-set-key (kbd "s-q") 'save-buffers-kill-terminal)
 (global-set-key (kbd "s-a") 'mark-whole-buffer)
-(global-set-key (kbd "s-x") 'kill-region)
+
 (global-set-key (kbd "s-w") 'delete-window)
 (global-set-key (kbd "s-W") 'delete-frame)
 (global-set-key (kbd "s-n") 'make-frame)
-(global-set-key (kbd "s-z") 'undo-tree-undo)
-(global-set-key (kbd "s-Z") 'undo-tree-redo)
+;; (global-set-key (kbd "s-z") 'undo-tree-undo)
+;; (global-set-key (kbd "s-Z") 'undo-tree-redo)
 (global-set-key (kbd "s-=") 'text-scale-increase)
 (global-set-key (kbd "s--") 'text-scale-decrease)
 (global-set-key (kbd "s-0") 'text-scale-adjust)
@@ -146,24 +247,19 @@
 (global-set-key (kbd "s-o") 'counsel-find-file)
 (global-set-key (kbd "s-s") 'save-buffer)
 (global-set-key (kbd "s-S") 'write-file)
-(global-set-key (kbd "s-/") 'comment-line)
-(global-set-key (kbd "s-,") 'crux-find-user-init-file)
-(global-set-key (kbd "s-P") 'counsel-M-x)
-(global-set-key (kbd "s-p") 'counsel-projectile-find-file)
-(global-set-key (kbd "C-s-<down>") 'move-text-down)
-(global-set-key (kbd "C-s-<up>") 'move-text-up)
 (global-set-key (kbd "s-<up>") 'beginning-of-buffer)
 (global-set-key (kbd "s-<down>") 'end-of-buffer)
 (global-set-key (kbd "s-b") 'ivy-switch-buffer)
 (global-set-key (kbd "s-`") 'other-frame)
 (global-set-key (kbd "s-1") 'delete-other-windows)
 (global-set-key (kbd "s-M-<return>") 'toggle-frame-maximized)
-;;(global-set-key (kbd "s-k s-w") 'delete-other-windows)
+(global-set-key (kbd "s-k s-w") 'delete-other-windows)
 (global-set-key (kbd "s-2") (lambda () (interactive)(split-window-vertically) (other-window 1)))
 (global-set-key (kbd "s-3") (lambda () (interactive)(split-window-horizontally) (other-window 1)))
 (global-set-key (kbd "s-\\") (lambda () (interactive)(split-window-horizontally) (other-window 1)))
-;;(global-set-key (kbd "s-k s-\\") (lambda () (interactive)(split-window-vertically) (other-window 1)))
-(global-set-key (kbd "s-l") 'goto-line)
+(global-set-key (kbd "s-k s-\\") (lambda () (interactive)(split-window-vertically) (other-window 1)))
+(global-unset-key (kbd "s-g"))
+(global-set-key (kbd "s-g s-l") 'goto-line)
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 ;; (global-set-key (kbd "<escape>") 'keyboard-quit)
 
@@ -269,6 +365,17 @@ results buffer.")
                 (ivy-wgrep-change-to-wgrep-mode))))
         (user-error "%S doesn't support wgrep" caller)))))
 
+(use-package whole-line-or-region
+  :ensure t
+  :config
+  (whole-line-or-region-mode))
+
+(use-package stupid-indent-mode
+  :ensure t)
+
+(use-package yafolding
+  :ensure t)
+
 (use-package counsel
   :ensure smex
   :config
@@ -295,6 +402,9 @@ results buffer.")
 (use-package wgrep
   :ensure t)
 
+(use-package general
+  :ensure t)
+
 (setq default-frame-alist '((font . "Source Code Pro-13")))
 ;(add-hook 'prog-mode-hook 'mac-auto-operator-composition-mode)
 ;(setq default-frame-alist '((font . "Fira Code-13")))
@@ -304,8 +414,8 @@ results buffer.")
 
 (use-package avy
   :ensure t
-  :bind (("s-." . avy-goto-word-or-subword-1)
-         ("s->" . avy-goto-char))
+  ;; :bind (("s-." . avy-goto-word-or-subword-1)
+  ;;        ("s->" . avy-goto-char))
   :config
   (setq avy-background t))
 
@@ -319,7 +429,11 @@ results buffer.")
   (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
 
 (use-package forge
-  :ensure t)
+  :ensure t
+  :config
+  (push '("git.realestate.com.au" "git.realestate.com.au/api/v3"
+        "git.realestate.com.au" forge-github-repository)
+        forge-alist))
 
 (use-package git-timemachine
   :ensure t
@@ -355,6 +469,7 @@ results buffer.")
   :ensure t
   :init
   (setq projectile-completion-system 'ivy)
+  (setq projectile-project-search-path '("~/Developer/rea"))
   :config
   (define-key projectile-mode-map (kbd "<C-s-268632080>") 'projectile-command-map)
   (projectile-global-mode +1)
@@ -381,24 +496,24 @@ results buffer.")
   :ensure t
   :bind ("C-=" . er/expand-region))
 
-(use-package smartparens
-  :ensure t
-  :diminish smartparens-mode
-  :bind
-  (("C-s-f" . sp-forward-sexp)
-   ("C-s-b" . sp-backward-sexp))
-  :init
-  (progn
-    (require 'smartparens-config)
-    (sp-use-paredit-bindings)
-    (smartparens-global-mode 1))
-  :config
-  (add-hook 'emacs-lisp-mode-hook #'smartparens-strict-mode)
-  ;; enable in the *scratch* buffer
-  (add-hook 'lisp-interaction-mode-hook #'smartparens-strict-mode)
-  (add-hook 'ielm-mode-hook #'smartparens-strict-mode)
-  (add-hook 'lisp-mode-hook #'smartparens-strict-mode)
-  (add-hook 'eval-expression-minibuffer-setup-hook #'smartparens-strict-mode))
+;; (use-package smartparens
+;;   :ensure t
+;;   :diminish smartparens-mode
+;;   :bind
+;;   (("C-s-f" . sp-forward-sexp)
+;;    ("C-s-b" . sp-backward-sexp))
+;;   :init
+;;   (progn
+;;     (require 'smartparens-config)
+;;     (sp-use-paredit-bindings)
+;;     (smartparens-global-mode 1))
+;;   :config
+;;   (add-hook 'emacs-lisp-mode-hook #'smartparens-strict-mode)
+;;   ;; enable in the *scratch* buffer
+;;   (add-hook 'lisp-interaction-mode-hook #'smartparens-strict-mode)
+;;   (add-hook 'ielm-mode-hook #'smartparens-strict-mode)
+;;   (add-hook 'lisp-mode-hook #'smartparens-strict-mode)
+;;   (add-hook 'eval-expression-minibuffer-setup-hook #'smartparens-strict-mode))
 
 ;; (use-package paredit
 ;;   :ensure t
@@ -608,7 +723,7 @@ results buffer.")
   :config
   (setq compilation-scroll-output nil)
   (setq rspec-use-docker-when-possible t)
-  (setq rspec-docker-container "test")
+  (setq rspec-docker-container "ci")
   (setq rspec-primary-source-dirs '("app" "lib")))
   ;; (setq rspec-primary-source-dirs '("app")))
 
@@ -700,7 +815,10 @@ results buffer.")
   (global-company-mode)
   ;; (add-to-list 'company-backends 'company-elm)
   ;; (add-to-list 'company-backends 'company-lsp)
-  (setq company-dabbrev-code-everywhere t))
+  ;; See https://github.com/company-mode/company-mode/issues/60
+  ;; https://emacs.stackexchange.com/questions/26082/company-mode-in-groovy-mode-how-to-get-completions-other-than-lowercase
+(setq company-dabbrev-downcase nil)
+(setq company-dabbrev-ignore-case t))
 
 (use-package hl-todo
   :ensure t
@@ -741,15 +859,20 @@ results buffer.")
   :config
   (which-key-mode +1))
 
-(use-package undo-tree
-  :ensure t
-  :diminish undo-tree-mode
-  :config
-  ;; autosave the undo-tree history
-  (setq undo-tree-history-directory-alist
-        `((".*" . ,temporary-file-directory)))
-  (setq undo-tree-auto-save-history t)
-  (global-undo-tree-mode))
+;; (use-package undo-tree
+;;   :ensure t
+;;   :diminish undo-tree-mode
+;;   :config
+;;   ;; autosave the undo-tree history
+;;   (setq undo-tree-history-directory-alist
+;;         `((".*" . ,temporary-file-directory)))
+;;   (setq undo-tree-auto-save-history t)
+;;   (global-undo-tree-mode))
+
+(use-package undo-fu
+  :bind (("s-z" . undo-fu-only-undo)
+         ("s-Z" . undo-fu-only-redo))
+  :ensure t)
 
 (use-package crux
   :ensure t
@@ -764,7 +887,6 @@ results buffer.")
          ("C-c e" . crux-eval-and-replace)
          ("C-c w" . crux-swap-windows)
          ("C-c D" . crux-delete-file-and-buffer)
-         ("s-D" . crux-duplicate-current-line-or-region)
          ("C-c r" . crux-rename-buffer-and-file)
          ("C-c k" . crux-kill-other-buffers)
          ("C-c TAB" . crux-indent-rigidly-and-copy-to-clipboard)
@@ -773,12 +895,9 @@ results buffer.")
          ;; ("s-r" . crux-recentf-find-file)
          ("s-j" . crux-top-join-line)
          ("C-^" . crux-top-join-line)
-         ("s-k" . crux-kill-whole-line)
          ("C-<backspace>" . crux-kill-line-backwards)
          ;;("s-o" . crux-smart-open-line-above)
          ([remap move-beginning-of-line] . crux-move-beginning-of-line)
-         ([(shift return)] . crux-smart-open-line)
-         ([(control shift return)] . crux-smart-open-line-above)
          ([remap kill-whole-line] . crux-kill-whole-line)
          ("C-c s" . crux-ispell-word-then-abbrev)
          ("C-c b" . crux-switch-to-previous-buffer)))
@@ -795,7 +914,7 @@ results buffer.")
          ;;("s-D" . mc/skip-to-next-like-this)
          ("C-<" . mc/mark-previous-like-this)
          ("C-s-g" . mc/mark-all-like-this)
-         ("C-S-<mouse-1>" . mc/add-cursor-on-click)))
+         ("M-C-<mouse-1>" . mc/add-cursor-on-click)))
 
 (use-package dumb-jump
   :ensure t
@@ -803,7 +922,7 @@ results buffer.")
   :bind (("s-g o" . dumb-jump-go-other-window)
          ("s-g o" . dumb-jump-go-other-window)
          ("s-g j" . dumb-jump-go)
-         ("<f12>" . dumb-jump-go)
+         ;; ("<f12>" . dumb-jump-go)
          ("s-g i" . dumb-jump-go-prompt)
          ("s-g x" . dumb-jump-go-prefer-external)
          ("s-g z" . dumb-jump-go-prefer-external-other-window))
@@ -874,7 +993,7 @@ results buffer.")
      ("." nil (reusable-frames . visible))))
   )
 
-(setq multiple-monitors t)
+(setq multiple-monitors nil)
 (if multiple-monitors
     (multiple-monitors)
     (single-monitor))
@@ -1013,14 +1132,17 @@ results buffer.")
   :ensure t
   :hook
   (scala-mode . lsp)
-  ;; (ruby-mode . lsp)
-  :config (setq lsp-prefer-flymake nil))
+  (ruby-mode . lsp)
+  :config
+  (lsp-register-client
+   ;; (make-lsp-client :new-connection (lsp-stdio-connection '("bundle" "exec" "srb" "tc" "--lsp" "-v" "--disable-watchman"))
+
+   (make-lsp-client :new-connection (lsp-stdio-connection '("bundle" "exec" "srb" "tc" "--lsp" "--enable-all-beta-lsp-features" "--disable-watchman"))
+                    :major-modes '(ruby-mode)
+                    :server-id 'sorbet))
+  (setq lsp-prefer-flymake nil))
 
 (use-package lsp-ui
-  :ensure t)
-
-;; Add company-lsp backend for metals
-(use-package company-lsp
   :ensure t)
 
 (defun doom-project-root (&optional dir)
@@ -1065,7 +1187,19 @@ If prefix ARG is non-nil, cd into `default-directory' instead of project root."
       (vterm-mode))
     (switch-to-buffer buffer)))
 
+
+(defun toggle-terminal ()
+  "Toggles between terminal and current buffer (creates terminal, if none exists)"
+  (interactive)
+  (if (string= (buffer-name) "*vterm*")
+      (switch-to-buffer (other-buffer (current-buffer)))
+    (if (get-buffer "*vterm*")
+        (switch-to-buffer "*vterm*")
+      (progn
+        (terminal)))))
+
 (global-set-key (kbd "C-t") 'terminal)
+(global-set-key (kbd "C-`") 'toggle-terminal)
 (global-set-key (kbd "C-S-t") 'here-named-term)
 
 
@@ -1140,3 +1274,55 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
 
 (use-package slim-mode
   :ensure t)
+
+(use-package carbon-now-sh
+  :ensure t)
+
+(use-package ripgrep
+  :ensure t)
+
+;; Set up a mode for JSON based templates
+
+(define-derived-mode cfn-json-mode js-mode
+    "CFN-JSON"
+    "Simple mode to edit CloudFormation template in JSON format."
+    (setq js-indent-level 2))
+
+(add-to-list 'magic-mode-alist
+             '("\\({\n *\\)? *[\"']AWSTemplateFormatVersion" . cfn-json-mode))
+
+;; Set up a mode for YAML based templates if yaml-mode is installed
+;; Get yaml-mode here https://github.com/yoshiki/yaml-mode
+(when (featurep 'yaml-mode)
+
+  (define-derived-mode cfn-yaml-mode yaml-mode
+    "CFN-YAML"
+    "Simple mode to edit CloudFormation template in YAML format.")
+
+  (add-to-list 'magic-mode-alist
+               '("\\(---\n\\)?AWSTemplateFormatVersion:" . cfn-yaml-mode)))
+
+;; Set up cfn-lint integration if flycheck is installed
+;; Get flycheck here https://www.flycheck.org/
+(when (featurep 'flycheck)
+  (flycheck-define-checker cfn-lint
+    "AWS CloudFormation linter using cfn-lint.
+
+Install cfn-lint first: pip install cfn-lint
+
+See `https://github.com/aws-cloudformation/cfn-python-lint'."
+
+    :command ("cfn-lint" "-f" "parseable" source)
+    :error-patterns ((warning line-start (file-name) ":" line ":" column
+                              ":" (one-or-more digit) ":" (one-or-more digit) ":"
+                              (id "W" (one-or-more digit)) ":" (message) line-end)
+                     (error line-start (file-name) ":" line ":" column
+                            ":" (one-or-more digit) ":" (one-or-more digit) ":"
+                            (id "E" (one-or-more digit)) ":" (message) line-end))
+    :modes (cfn-json-mode cfn-yaml-mode))
+
+  (add-to-list 'flycheck-checkers 'cfn-lint)
+  (add-hook 'cfn-json-mode-hook 'flycheck-mode)
+  (add-hook 'cfn-yaml-mode-hook 'flycheck-mode))
+
+(define-key git-commit-mode-map (kbd "C-c C-p") 'git-commit-co-authored)
