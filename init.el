@@ -224,7 +224,7 @@
 (global-set-key (kbd "M-<f12>") 'lsp-ui-peek-find-definitions)
 
 
-
+;; (global-set-key (kbd "s-v") 'vterm-yank)
 
 ;; Others
 (global-set-key (kbd "S-<SPC>") 'set-mark-command) ;; Insert cursor below
@@ -365,10 +365,10 @@ results buffer.")
                 (ivy-wgrep-change-to-wgrep-mode))))
         (user-error "%S doesn't support wgrep" caller)))))
 
-(use-package whole-line-or-region
-  :ensure t
-  :config
-  (whole-line-or-region-mode))
+;; (use-package whole-line-or-region
+;;   :ensure t
+;;   :config
+;;   (whole-line-or-region-mode))
 
 (use-package stupid-indent-mode
   :ensure t)
@@ -475,22 +475,29 @@ results buffer.")
   (projectile-global-mode +1)
   (setq projectile-switch-project-action 'projectile-dired))
 
+;; (defun counsel-projectile-find-file-occur ()
+;;     (cd (projectile-project-root))
+;;     (counsel-cmd-to-dired
+;;      (counsel--expand-ls
+;;       (format
+;;        "find . | grep -i -E '%s' | xargs ls"
+;;        (counsel--elisp-to-pcre ivy--old-re)))))
+
 (defun counsel-projectile-find-file-occur ()
     (cd (projectile-project-root))
     (counsel-cmd-to-dired
-     (counsel--expand-ls
-      (format
-       "find . | grep -i -E '%s' | xargs ls"
-       (counsel-unquote-regex-parens ivy--old-re)))))
+     (format
+      "find . | grep -i -E '%s' | xargs -d '\n' ls"
+      (counsel--elisp-to-pcre ivy--old-re))))
 
 (use-package counsel-projectile
   :ensure t
   :bind* ("s-F" . counsel-projectile-rg)
   :init
-  (counsel-projectile-mode)
-  :config
-  (ivy-set-occur 'counsel-projectile-find-file 'counsel-projectile-find-file-occur)
-  (ivy-set-occur 'counsel-projectile 'counsel-projectile-find-file-occur))
+  (counsel-projectile-mode))
+  ;; :config
+  ;; (ivy-set-occur 'counsel-projectile-find-file 'counsel-projectile-find-file-occur)
+  ;; (ivy-set-occur 'counsel-projectile 'counsel-projectile-find-file-occur))
 
 (use-package expand-region
   :ensure t
@@ -723,7 +730,7 @@ results buffer.")
   :config
   (setq compilation-scroll-output nil)
   (setq rspec-use-docker-when-possible t)
-  (setq rspec-docker-container "ci")
+  (setq rspec-docker-container "test")
   (setq rspec-primary-source-dirs '("app" "lib")))
   ;; (setq rspec-primary-source-dirs '("app")))
 
