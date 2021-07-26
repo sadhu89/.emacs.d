@@ -2,6 +2,7 @@
 
 (add-to-list 'package-archives
              '("melpa" . "https://melpa.org/packages/") t)
+(add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 
 (setq mac-command-modifier 'super)
 (setq mac-option-modifier 'meta)
@@ -62,6 +63,9 @@
 
 ;; enable y/n answers
 (fset 'yes-or-no-p 'y-or-n-p)
+
+;; maximize the initial frame automatically
+(add-to-list 'initial-frame-alist '(fullscreen . maximized))
 
 ;; more useful frame title, that show either a file or a
 ;; buffer name (if the buffer isn't visiting a file)
@@ -216,12 +220,13 @@
 (global-set-key (kbd "M-s-<down>") 'mc/mark-next-like-this) ;; Insert cursor below
 (global-set-key (kbd "M-I") 'mc/edit-ends-of-lines) ;; Insert cursor below
 
-(global-set-key (kbd "<f12>") 'lsp-find-definition)
-(global-set-key (kbd "s-<down-mouse-1>") 'lsp-find-definition-mouse)
-(global-set-key (kbd "s-<mouse-1>") 'ignore)
-(global-set-key (kbd "S-<f12>") 'lsp-ui-peek-find-references)
-(global-set-key (kbd "s-.") 'lsp-execute-code-action)
-(global-set-key (kbd "M-<f12>") 'lsp-ui-peek-find-definitions)
+(global-set-key (kbd "<f12>") 'xref-find-definitions)
+(global-set-key (kbd "s-4 <f12>") 'xref-find-definitions-other-window)
+;; (global-set-key (kbd "s-<down-mouse-1>") 'lsp-find-definition-mouse)
+;; (global-set-key (kbd "s-<mouse-1>") 'ignore)
+(global-set-key (kbd "S-<f12>") 'xref-find-references)
+(global-set-key (kbd "s-.") 'eglot-code-actions)
+(global-set-key (kbd "M-<f12>") 'eglot-find-typeDefinition)
 
 
 ;; (global-set-key (kbd "s-v") 'vterm-yank)
@@ -264,6 +269,12 @@
 ;; (global-set-key (kbd "<escape>") 'keyboard-quit)
 
 (define-key 'help-command (kbd "C-i") #'info-display-manual)
+
+(global-set-key (kbd "s-t") 'projectile-toggle-between-implementation-and-test)
+
+(global-set-key (kbd "s-4 t") 'projectile-find-implementation-or-test-other-window)
+(global-set-key (kbd "s-T") 'dired-sidebar-toggle-sidebar)
+
 
 ; don't ask for confirmation when opening symlinked file
 (setq vc-follow-symlinks t )
@@ -439,17 +450,21 @@ results buffer.")
   :ensure t
   :bind (("s-g" . git-timemachine)))
 
-(use-package solarized-theme
-  :ensure t
-  :config
-  (load-theme 'solarized-light t)
-  (let ((line (face-attribute 'mode-line :underline)))
-    (set-face-attribute 'mode-line          nil :overline   line)
-    (set-face-attribute 'mode-line-inactive nil :overline   line)
-    (set-face-attribute 'mode-line-inactive nil :underline  line)
-    (set-face-attribute 'mode-line          nil :box        nil)
-    (set-face-attribute 'mode-line-inactive nil :box        nil)
-    (set-face-attribute 'mode-line-inactive nil :background "#f9f2d9")))
+;; (use-package solarized-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'solarized-light t)
+;;   (let ((line (face-attribute 'mode-line :underline)))
+;;     (set-face-attribute 'mode-line          nil :overline   line)
+;;     (set-face-attribute 'mode-line-inactive nil :overline   line)
+;;     (set-face-attribute 'mode-line-inactive nil :underline  line)
+;;     (set-face-attribute 'mode-line          nil :box        nil)
+;;     (set-face-attribute 'mode-line-inactive nil :box        nil)
+;;     (set-face-attribute 'mode-line-inactive nil :background "#f9f2d9")))
+
+(use-package spacemacs-common
+    :ensure spacemacs-theme
+    :config (load-theme 'spacemacs-light t))
 
 (use-package moody
   :ensure t
@@ -471,7 +486,7 @@ results buffer.")
   (setq projectile-completion-system 'ivy)
   (setq projectile-project-search-path '("~/Developer/rea"))
   :config
-  (define-key projectile-mode-map (kbd "<C-s-268632080>") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-s-p") 'projectile-command-map)
   (projectile-global-mode +1)
   (setq projectile-switch-project-action 'projectile-dired))
 
@@ -503,24 +518,24 @@ results buffer.")
   :ensure t
   :bind ("C-=" . er/expand-region))
 
-;; (use-package smartparens
-;;   :ensure t
-;;   :diminish smartparens-mode
-;;   :bind
-;;   (("C-s-f" . sp-forward-sexp)
-;;    ("C-s-b" . sp-backward-sexp))
-;;   :init
-;;   (progn
-;;     (require 'smartparens-config)
-;;     (sp-use-paredit-bindings)
-;;     (smartparens-global-mode 1))
-;;   :config
-;;   (add-hook 'emacs-lisp-mode-hook #'smartparens-strict-mode)
-;;   ;; enable in the *scratch* buffer
-;;   (add-hook 'lisp-interaction-mode-hook #'smartparens-strict-mode)
-;;   (add-hook 'ielm-mode-hook #'smartparens-strict-mode)
-;;   (add-hook 'lisp-mode-hook #'smartparens-strict-mode)
-;;   (add-hook 'eval-expression-minibuffer-setup-hook #'smartparens-strict-mode))
+(use-package smartparens
+  :ensure t
+  :diminish smartparens-mode
+  :bind
+  (("C-s-f" . sp-forward-sexp)
+   ("C-s-b" . sp-backward-sexp))
+  :init
+  (progn
+    (require 'smartparens-config)
+    (sp-use-paredit-bindings)
+    (smartparens-global-mode 1))
+  :config
+  (add-hook 'emacs-lisp-mode-hook #'smartparens-strict-mode)
+  ;; enable in the *scratch* buffer
+  (add-hook 'lisp-interaction-mode-hook #'smartparens-strict-mode)
+  (add-hook 'ielm-mode-hook #'smartparens-strict-mode)
+  (add-hook 'lisp-mode-hook #'smartparens-strict-mode)
+  (add-hook 'eval-expression-minibuffer-setup-hook #'smartparens-strict-mode))
 
 ;; (use-package paredit
 ;;   :ensure t
@@ -725,8 +740,10 @@ results buffer.")
   :bind*
   (("s-r" . rspec-rerun))
   :bind
-  (("s-t" . rspec-toggle-spec-and-target)
-   ("s-4 t" . rspec-find-spec-or-target-other-window))
+  (
+   ;; ("s-t" . rspec-toggle-spec-and-target)
+   ;; ("s-4 t" . rspec-find-spec-or-target-other-window)
+   ("s-r" . rspec-rerun))
   :config
   (setq compilation-scroll-output nil)
   (setq rspec-use-docker-when-possible t)
@@ -801,6 +818,14 @@ results buffer.")
   (setq js2-basic-offset 2)
   :mode "\\.js\\'")
 
+(use-package typescript-mode
+  :ensure t
+  :mode "\\.tsx?$"
+  :hook
+  (typescript-mode . lsp)
+  :custom
+  (typescript-indent-level 2))
+
 (use-package haml-mode
   :ensure t)
 
@@ -820,6 +845,7 @@ results buffer.")
   :bind (("TAB" . company-indent-or-complete-common))
   :config
   (global-company-mode)
+  (setq lsp-completion-provider :capf)
   ;; (add-to-list 'company-backends 'company-elm)
   ;; (add-to-list 'company-backends 'company-lsp)
   ;; See https://github.com/company-mode/company-mode/issues/60
@@ -906,6 +932,7 @@ results buffer.")
          ;;("s-o" . crux-smart-open-line-above)
          ([remap move-beginning-of-line] . crux-move-beginning-of-line)
          ([remap kill-whole-line] . crux-kill-whole-line)
+         ("C-K" . crux-kill-whole-line)
          ("C-c s" . crux-ispell-word-then-abbrev)
          ("C-c b" . crux-switch-to-previous-buffer)))
 
@@ -1119,13 +1146,20 @@ results buffer.")
   :diminish
   :hook (after-init . global-auto-revert-mode))
 
-;; Enable scala-mode and sbt-mode
+
+;; Metals
+
+;; Enable scala-mode for highlighting, indentation and motion commands
 (use-package scala-mode
   :ensure t
-  :mode "\\.s\\(cala\\|bt\\)$")
+  ;; :bind (("s-r" . lsp-avy-lens))
+  :interpreter
+  ("scala" . scala-mode))
 
+;; ;; Enable sbt mode for executing sbt commands
 (use-package sbt-mode
   :ensure t
+  :bind ("s-r" . sbt-hydra)
   :commands sbt-start sbt-command
   :config
   ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
@@ -1133,24 +1167,149 @@ results buffer.")
   (substitute-key-definition
    'minibuffer-complete-word
    'self-insert-command
-   minibuffer-local-completion-map))
+   minibuffer-local-completion-map)
+   ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+   (setq sbt:program-options '("-Dsbt.supershell=false"))
+)
 
 (use-package lsp-mode
   :ensure t
   :hook
+  ;; Enable lsp-mode automatically in scala files
   (scala-mode . lsp)
-  (ruby-mode . lsp)
+  (lsp-mode . lsp-lens-mode)
+  ;; (ruby-mode . lsp)
+  (dockerfile-mode . lsp-deferred)
+  (lsp-mode . lsp-enable-which-key-integration)
   :config
-  (lsp-register-client
-   ;; (make-lsp-client :new-connection (lsp-stdio-connection '("bundle" "exec" "srb" "tc" "--lsp" "-v" "--disable-watchman"))
+  ;; (lsp-register-client
+   ;; (make-lsp-client :new-connection (lsp-stdio-connection '("bundle" "exec" "srb" "tc" "--lsp" "--enable-all-beta-lsp-features" "--disable-watchman"))
+   ;;                  :major-modes '(ruby-mode)
+   ;;                  :server-id 'sorbet))
+   ;; Uncomment following section if you would like to tune lsp-mode performance according to
+  ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
+   (setq gc-cons-threshold 100000000) ;; 100mb
+   (setq read-process-output-max (* 1024 1024)) ;; 1mb
+   (setq lsp-idle-delay 0.500)
+   (setq lsp-log-io nil)
+   (setq lsp-completion-provider :capf)
+   (setq lsp-prefer-flymake nil))
 
-   (make-lsp-client :new-connection (lsp-stdio-connection '("bundle" "exec" "srb" "tc" "--lsp" "--enable-all-beta-lsp-features" "--disable-watchman"))
-                    :major-modes '(ruby-mode)
-                    :server-id 'sorbet))
-  (setq lsp-prefer-flymake nil))
 
+;; (use-package dockerfile-mode
+;;   :ensure t)
+
+;; Add metals backend for lsp-mode
+(use-package lsp-metals
+  :ensure t
+  :config
+  ;; (setq lsp-metals-treeview-show-when-views-received t)
+  )
+
+;; Enable nice rendering of documentation on hover
 (use-package lsp-ui
   :ensure t)
+
+;; Use the Debug Adapter Protocol for running tests and debugging
+(use-package posframe
+  ;; Posframe is a pop-up tool that must be manually installed for dap-mode
+  :ensure t)
+
+(use-package dap-mode
+  :ensure t
+  :hook
+  (lsp-mode . dap-mode)
+  (lsp-mode . dap-ui-mode))
+
+(use-package lsp-ivy
+  :ensure t
+  :commands lsp-ivy-workspace-symbol)
+
+;; eglot
+;; Enable scala-mode and sbt-mode
+;; (use-package scala-mode
+;;   :interpreter
+;;     ("scala" . scala-mode))
+
+;; (defun sbt:run-sbt (&optional kill-existing-p pop-p)
+;;   "Start or restarts (if kill-existing-p is non-NIL) sbt in a
+;; buffer called *sbt*projectdir."
+;;   (let* ((project-root (or (sbt:find-root)
+;; 			   (error "Could not find project root, type `C-h f sbt:find-root` for help.")))
+;;          (buffer-name (sbt:buffer-name))
+;;          (inhibit-read-only 1))
+;;     ;; (when (null project-root)
+;;     ;;   (error "Could not find project root, type `C-h f sbt:find-root` for help."))
+
+;;     ;; (when (not (or (executable-find sbt:program-name)
+;;     ;;                (file-executable-p (concat project-root sbt:program-name))))
+;;     ;;   (error "Could not find %s in %s or on PATH. Please customize the sbt:program-name variable." sbt:program-name project-root))
+
+;;     ;; kill existing sbt
+;;     (when (and kill-existing-p (get-buffer buffer-name))
+;;       (sbt:clear buffer-name)
+;;       (kill-buffer buffer-name))
+
+;;     ;; start new sbt
+;;     (with-current-buffer (get-buffer-create buffer-name)
+;;       (when pop-p (pop-to-buffer-same-window (current-buffer)))
+;;       (unless (comint-check-proc (current-buffer))
+;;         (unless (derived-mode-p 'sbt-mode) (sbt-mode))
+;;         (cd project-root)
+;;         (buffer-disable-undo)
+;;         (message "Starting sbt in buffer %s " buffer-name)
+
+;;         ;; insert a string to buffer so that process mark comes after
+;;         ;; compilation-messages-start mark.
+;;         (insert (concat "Running " sbt:program-name "\n"))
+;;         (goto-char (point-min))
+;;         (ignore-errors (compilation-forget-errors))
+;;         (comint-exec (current-buffer) buffer-name sbt:program-name nil sbt:program-options))
+;;       (current-buffer))))
+
+;; (use-package sbt-mode
+;;   :ensure t
+;;   :bind ("s-r" . sbt-hydra)
+;;   :commands sbt-start sbt-command
+;;   :config
+;;   ;; (setq sbt:program-name "auto/dev-environment sbt")
+;;   ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+;;   ;; allows using SPACE when in the minibuffer
+;;   (substitute-key-definition
+;;    'minibuffer-complete-word
+;;    'self-insert-command
+;;    minibuffer-local-completion-map))
+
+;; ;; Enable sbt mode for executing sbt commands
+;; (use-package sbt-mode
+;;   :ensure t
+;;   :bind ("s-r" . sbt-hydra)
+;;   :commands sbt-start sbt-command
+;;   :config
+;;   ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
+;;   ;; allows using SPACE when in the minibuffer
+;;   (substitute-key-definition
+;;    'minibuffer-complete-word
+;;    'self-insert-command
+;;    minibuffer-local-completion-map)
+;;    ;; sbt-supershell kills sbt-mode:  https://github.com/hvesalai/emacs-sbt-mode/issues/152
+;;    (setq sbt:program-options '("-Dsbt.supershell=false"))
+;; )
+
+;; (use-package eglot
+;;   :ensure t
+;;   :config
+;;   (add-to-list 'eglot-server-programs '(scala-mode . ("metals-emacs")))
+;;   (add-hook 'before-save-hook
+;;             (lambda () (when (eglot-managed-p)
+;;                          (eglot-format-buffer))))
+;;   ;; (optional) Automatically start metals for Scala files.
+;;   :hook (scala-mode . eglot-ensure))
+;; (use-package eglot
+;;   :ensure t
+;;   :pin melpa-stable
+;;   ;; (optional) Automatically start metals for Scala files.
+;;   :hook (scala-mode . eglot-ensure))
 
 (defun doom-project-root (&optional dir)
   "Return the project root of DIR (defaults to `default-directory').
@@ -1333,3 +1492,116 @@ See `https://github.com/aws-cloudformation/cfn-python-lint'."
   (add-hook 'cfn-yaml-mode-hook 'flycheck-mode))
 
 (define-key git-commit-mode-map (kbd "C-c C-p") 'git-commit-co-authored)
+
+
+;; (use-package treemacs
+;;   :ensure t
+;;   :defer t
+;;   :init
+;;   (with-eval-after-load 'winum
+;;     (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+;;   :config
+;;   (progn
+;;     (setq treemacs-collapse-dirs                 (if treemacs-python-executable 3 0)
+;;           treemacs-deferred-git-apply-delay      0.5
+;;           treemacs-directory-name-transformer    #'identity
+;;           treemacs-display-in-side-window        t
+;;           treemacs-eldoc-display                 t
+;;           treemacs-file-event-delay              5000
+;;           treemacs-file-extension-regex          treemacs-last-period-regex-value
+;;           treemacs-file-follow-delay             0.2
+;;           treemacs-file-name-transformer         #'identity
+;;           treemacs-follow-after-init             t
+;;           treemacs-git-command-pipe              ""
+;;           treemacs-goto-tag-strategy             'refetch-index
+;;           treemacs-indentation                   2
+;;           treemacs-indentation-string            " "
+;;           treemacs-is-never-other-window         nil
+;;           treemacs-max-git-entries               5000
+;;           treemacs-missing-project-action        'ask
+;;           treemacs-move-forward-on-expand        nil
+;;           treemacs-no-png-images                 nil
+;;           treemacs-no-delete-other-windows       t
+;;           treemacs-project-follow-cleanup        nil
+;;           treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+;;           treemacs-position                      'left
+;;           treemacs-recenter-distance             0.1
+;;           treemacs-recenter-after-file-follow    nil
+;;           treemacs-recenter-after-tag-follow     nil
+;;           treemacs-recenter-after-project-jump   'always
+;;           treemacs-recenter-after-project-expand 'on-distance
+;;           treemacs-show-cursor                   nil
+;;           treemacs-show-hidden-files             t
+;;           treemacs-silent-filewatch              nil
+;;           treemacs-silent-refresh                nil
+;;           treemacs-sorting                       'alphabetic-asc
+;;           treemacs-space-between-root-nodes      t
+;;           treemacs-tag-follow-cleanup            t
+;;           treemacs-tag-follow-delay              1.5
+;;           treemacs-user-mode-line-format         nil
+;;           treemacs-user-header-line-format       nil
+;;           treemacs-width                         35
+;;           treemacs-workspace-switch-cleanup      nil)
+
+;;     ;; The default width and height of the icons is 22 pixels. If you are
+;;     ;; using a Hi-DPI display, uncomment this to double the icon size.
+;;     ;;(treemacs-resize-icons 44)
+
+;;     (treemacs-follow-mode t)
+;;     (treemacs-filewatch-mode t)
+;;     (treemacs-fringe-indicator-mode t)
+;;     (pcase (cons (not (null (executable-find "git")))
+;;                  (not (null treemacs-python-executable)))
+;;       (`(t . t)
+;;        (treemacs-git-mode 'deferred))
+;;       (`(t . _)
+;;        (treemacs-git-mode 'simple))))
+;;   :bind
+;;   (:map global-map
+;;         ("M-0"       . treemacs-select-window)
+;;         ("C-x t 1"   . treemacs-delete-other-windows)
+;;         ("C-x t t"   . treemacs)
+;;         ("C-x t B"   . treemacs-bookmark)
+;;         ("C-x t C-t" . treemacs-find-file)
+;;         ("C-x t M-t" . treemacs-find-tag)))
+
+;; (use-package treemacs-projectile
+;;   :after treemacs projectile
+;;   :ensure t)
+
+;; (use-package treemacs-icons-dired
+;;   :after treemacs dired
+;;   :ensure t
+;;   :config (treemacs-icons-dired-mode))
+
+;; (use-package treemacs-magit
+;;   :after treemacs magit
+;;   :ensure t)
+
+;; (use-package lsp-treemacs
+;;   :ensure t
+;;   :commands lsp-treemacs-errors-list)
+
+(defun j-dired-find-file ()
+    "Like `find-file' but with `default-directory' set to the
+one specified by listing header."
+    (interactive)
+    (let ((default-directory (dired-current-directory)))
+      (call-interactively #'find-file)))
+
+(use-package dired-sidebar
+  :ensure t
+  :bind (:map dired-mode-map
+              ("s-o" . j-dired-find-file))
+  :commands (dired-sidebar-toggle-sidebar))
+
+(use-package all-the-icons
+  :ensure t
+  :config (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
+
+(use-package all-the-icons-dired
+  :ensure t)
+
+
+(setq split-width-threshold nil)
+(setq split-height-threshold nil)
