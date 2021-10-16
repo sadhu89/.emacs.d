@@ -1,4 +1,5 @@
 (require 'package)
+(setq byte-compile-warnings '(cl-functions))
 
 (add-to-list 'package-archives
              '("melpa" . "https://melpa.org/packages/") t)
@@ -20,8 +21,8 @@
 (setq load-prefer-newer t)
 
 ;; reduce the frequency of garbage collection by making it happen on
-;; each 50MB of allocated data (the default is on every 0.76MB)
-(setq gc-cons-threshold 50000000)
+;; each 100MB of allocated data (the default is on every 0.76MB)
+(setq gc-cons-threshold 100000000)
 
 ;; warn when opening files bigger than 100MB
 (setq large-file-warning-threshold 100000000)
@@ -56,7 +57,7 @@
 ;; mode line settings
 
 (line-number-mode t)
-(column-number-mode t)
+(column-number-mode -1)
 (size-indication-mode t)
 
 (add-hook 'prog-mode-hook 'linum-mode)
@@ -225,7 +226,7 @@
 ;; (global-set-key (kbd "s-<down-mouse-1>") 'lsp-find-definition-mouse)
 ;; (global-set-key (kbd "s-<mouse-1>") 'ignore)
 (global-set-key (kbd "S-<f12>") 'xref-find-references)
-(global-set-key (kbd "s-.") 'eglot-code-actions)
+(global-set-key (kbd "s-.") 'lsp-execute-code-action)
 (global-set-key (kbd "M-<f12>") 'eglot-find-typeDefinition)
 
 
@@ -240,9 +241,9 @@
 
 (global-set-key (kbd "s-w") 'delete-window)
 (global-set-key (kbd "s-W") 'delete-frame)
-(global-set-key (kbd "s-n") 'make-frame)
-;; (global-set-key (kbd "s-z") 'undo-tree-undo)
-;; (global-set-key (kbd "s-Z") 'undo-tree-redo)
+;; (global-set-key (kbd "s-n") 'make-frame)
+(global-set-key (kbd "s-z") 'undo-tree-undo)
+(global-set-key (kbd "s-Z") 'undo-tree-redo)
 (global-set-key (kbd "s-=") 'text-scale-increase)
 (global-set-key (kbd "s--") 'text-scale-decrease)
 (global-set-key (kbd "s-0") 'text-scale-adjust)
@@ -274,6 +275,9 @@
 
 (global-set-key (kbd "s-4 t") 'projectile-find-implementation-or-test-other-window)
 (global-set-key (kbd "s-T") 'dired-sidebar-toggle-sidebar)
+
+(global-set-key (kbd "s-n") 'ivy-next-history-element)
+;; (global-set-key (kbd "s-p") 'ivy-previous-history-element)
 
 
 ; don't ask for confirmation when opening symlinked file
@@ -391,6 +395,7 @@ results buffer.")
   :ensure smex
   :config
   (ivy-mode 1)
+  (setcdr (assoc 'counsel-M-x ivy-initial-inputs-alist) "")
   (setq ivy-use-virtual-buffers t)
   (setq counsel-grep-base-command
         "rg -i -M 120 --no-heading --line-number --color never '%s' %s")
@@ -425,8 +430,8 @@ results buffer.")
 
 (use-package avy
   :ensure t
-  ;; :bind (("s-." . avy-goto-word-or-subword-1)
-  ;;        ("s->" . avy-goto-char))
+  :bind (("C-j" . avy-goto-word-or-subword-1)
+         ("C-J" . avy-goto-char))
   :config
   (setq avy-background t))
 
@@ -746,17 +751,23 @@ results buffer.")
    ("s-r" . rspec-rerun))
   :config
   (setq compilation-scroll-output nil)
-  (setq rspec-use-docker-when-possible t)
-  (setq rspec-docker-container "test")
+  (setq rspec-use-docker-when-possible nil)
+  (setq rspec-docker-container "app")
   (setq rspec-primary-source-dirs '("app" "lib")))
   ;; (setq rspec-primary-source-dirs '("app")))
 
-(use-package minitest
-  :ensure t
-  :config
-  (progn
-    (setq minitest-use-bundler nil))
-  (add-hook 'ruby-mode-hook 'minitest-mode))
+;; (use-package minitest
+;;   :ensure t
+;;   :bind*
+;;   (("s-R v" . minitest-verify)
+;;    ("s-r" . minitest-rerun)
+;;    ("s-R s" . minitest-verify-single)
+;;    ("s-R a" . minitest-verify-all))
+;;   :config
+;;   (progn
+;;     (setq minitest-use-bundler t)
+;;     (setq minitest-default-command '("ruby" "-W0" "-Ilib:test:spec")))
+;;   (add-hook 'ruby-mode-hook 'minitest-mode))
 
 (use-package rbenv
   :ensure t
@@ -875,10 +886,10 @@ results buffer.")
   :init
   (global-flycheck-mode))
 
-(use-package super-save
-  :ensure t
-  :config
-  (super-save-mode +1))
+;; (use-package super-save
+;;   :ensure t
+;;   :config
+;;   (super-save-mode +1))
 
 (use-package diff-hl
   :ensure t
@@ -892,20 +903,20 @@ results buffer.")
   :config
   (which-key-mode +1))
 
-;; (use-package undo-tree
-;;   :ensure t
-;;   :diminish undo-tree-mode
-;;   :config
-;;   ;; autosave the undo-tree history
-;;   (setq undo-tree-history-directory-alist
-;;         `((".*" . ,temporary-file-directory)))
-;;   (setq undo-tree-auto-save-history t)
-;;   (global-undo-tree-mode))
+(use-package undo-tree
+  :ensure t
+  :diminish undo-tree-mode
+  :config
+  ;; autosave the undo-tree history
+  (setq undo-tree-history-directory-alist
+        `((".*" . ,temporary-file-directory)))
+  (setq undo-tree-auto-save-history t)
+  (global-undo-tree-mode))
 
-(use-package undo-fu
-  :bind (("s-z" . undo-fu-only-undo)
-         ("s-Z" . undo-fu-only-redo))
-  :ensure t)
+;; (use-package undo-fu
+;;   :bind (("s-z" . undo-fu-only-undo)
+;;          ("s-Z" . undo-fu-only-redo))
+;;   :ensure t)
 
 (use-package crux
   :ensure t
@@ -920,7 +931,7 @@ results buffer.")
          ("C-c e" . crux-eval-and-replace)
          ("C-c w" . crux-swap-windows)
          ("C-c D" . crux-delete-file-and-buffer)
-         ("C-c r" . crux-rename-buffer-and-file)
+         ("C-c r" . rename-file-and-buffer)
          ("C-c k" . crux-kill-other-buffers)
          ("C-c TAB" . crux-indent-rigidly-and-copy-to-clipboard)
          ("s-," . crux-find-user-init-file)
@@ -943,9 +954,10 @@ results buffer.")
 
 (use-package multiple-cursors
   :ensure t
+  :init (global-unset-key (kbd "s-k"))
   :bind* (("C-S-c C-S-c" . mc/edit-lines)
-         ("s-d" . mc/mark-next-like-this)
-         ;;("s-D" . mc/skip-to-next-like-this)
+          ("s-d" . mc/mark-next-like-this)
+          ("s-k s-d" . mc/skip-to-next-like-this)
          ("C-<" . mc/mark-previous-like-this)
          ("C-s-g" . mc/mark-all-like-this)
          ("M-C-<mouse-1>" . mc/add-cursor-on-click)))
@@ -956,6 +968,7 @@ results buffer.")
   :bind (("s-g o" . dumb-jump-go-other-window)
          ("s-g o" . dumb-jump-go-other-window)
          ("s-g j" . dumb-jump-go)
+         ("s-g g" . goto-line)
          ;; ("<f12>" . dumb-jump-go)
          ("s-g i" . dumb-jump-go-prompt)
          ("s-g x" . dumb-jump-go-prefer-external)
@@ -1152,14 +1165,12 @@ results buffer.")
 ;; Enable scala-mode for highlighting, indentation and motion commands
 (use-package scala-mode
   :ensure t
-  ;; :bind (("s-r" . lsp-avy-lens))
   :interpreter
-  ("scala" . scala-mode))
+    ("scala" . scala-mode))
 
-;; ;; Enable sbt mode for executing sbt commands
+;; Enable sbt mode for executing sbt commands
 (use-package sbt-mode
   :ensure t
-  :bind ("s-r" . sbt-hydra)
   :commands sbt-start sbt-command
   :config
   ;; WORKAROUND: https://github.com/ensime/emacs-sbt-mode/issues/31
@@ -1172,28 +1183,25 @@ results buffer.")
    (setq sbt:program-options '("-Dsbt.supershell=false"))
 )
 
+
+(defun lsp-install-save-hooks ()
+  (add-hook 'before-save-hook #'lsp-format-buffer t t)
+  (add-hook 'before-save-hook #'lsp-organize-imports t t))
+
 (use-package lsp-mode
-  :ensure t
-  :hook
-  ;; Enable lsp-mode automatically in scala files
-  (scala-mode . lsp)
-  (lsp-mode . lsp-lens-mode)
-  ;; (ruby-mode . lsp)
-  (dockerfile-mode . lsp-deferred)
-  (lsp-mode . lsp-enable-which-key-integration)
+  ;; Optional - enable lsp-mode automatically in scala files
+  :hook  (scala-mode . lsp)
+         (scala-mode . lsp-install-save-hooks)
+         (lsp-mode . lsp-lens-mode)
   :config
-  ;; (lsp-register-client
-   ;; (make-lsp-client :new-connection (lsp-stdio-connection '("bundle" "exec" "srb" "tc" "--lsp" "--enable-all-beta-lsp-features" "--disable-watchman"))
-   ;;                  :major-modes '(ruby-mode)
-   ;;                  :server-id 'sorbet))
-   ;; Uncomment following section if you would like to tune lsp-mode performance according to
+  ;; Uncomment following section if you would like to tune lsp-mode performance according to
   ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
-   (setq gc-cons-threshold 100000000) ;; 100mb
-   (setq read-process-output-max (* 1024 1024)) ;; 1mb
-   (setq lsp-idle-delay 0.500)
-   (setq lsp-log-io nil)
-   (setq lsp-completion-provider :capf)
-   (setq lsp-prefer-flymake nil))
+  ;;       (setq gc-cons-threshold 100000000) ;; 100mb
+        (setq read-process-output-max (* 1024 1024)) ;; 1mb
+  ;;       (setq lsp-idle-delay 0.500)
+  ;;       (setq lsp-log-io nil)
+  ;;       (setq lsp-completion-provider :capf)
+  (setq lsp-prefer-flymake nil))
 
 
 ;; (use-package dockerfile-mode
@@ -1201,14 +1209,16 @@ results buffer.")
 
 ;; Add metals backend for lsp-mode
 (use-package lsp-metals
-  :ensure t
-  :config
-  ;; (setq lsp-metals-treeview-show-when-views-received t)
-  )
+  :ensure t)
+
+;; (use-package lsp-java
+;;   :ensure t
+;;   :config (add-hook 'java-mode-hook 'lsp))
 
 ;; Enable nice rendering of documentation on hover
 (use-package lsp-ui
-  :ensure t)
+  :ensure t
+  :config (setq lsp-ui-sideline-diagnostic-max-lines 20))
 
 ;; Use the Debug Adapter Protocol for running tests and debugging
 (use-package posframe
@@ -1219,7 +1229,10 @@ results buffer.")
   :ensure t
   :hook
   (lsp-mode . dap-mode)
-  (lsp-mode . dap-ui-mode))
+  (lsp-mode . dap-ui-mode)
+  :config
+  (add-hook 'dap-stopped-hook
+          (lambda (arg) (call-interactively #'dap-hydra))))
 
 (use-package lsp-ivy
   :ensure t
@@ -1603,5 +1616,65 @@ one specified by listing header."
   :ensure t)
 
 
-(setq split-width-threshold nil)
-(setq split-height-threshold nil)
+;; (setq split-width-threshold nil)
+;; (setq split-height-threshold nil)
+
+
+(use-package helpful
+  :ensure t)
+
+(global-set-key (kbd "C-h f") #'helpful-callable)
+(global-set-key (kbd "C-h v") #'helpful-variable)
+(global-set-key (kbd "C-h k") #'helpful-key)
+(global-set-key (kbd "C-c C-d") #'helpful-at-point)
+(global-set-key (kbd "C-h F") #'helpful-function)
+
+;; (defun my-forge-post-submit-callback-kill-url (value _headers _status _req)
+;;   (when t
+;;     (when-let ((url (alist-get 'html_url value)))
+;;       (kill-new url))))
+
+;; (add-hook 'forge-post-submit-callback-hook 'my-forge-post-submit-callback-kill-url)
+
+
+
+(defvar log-process nil)
+(make-variable-buffer-local 'log-process)
+
+(defun metals-log()
+  (interactive)
+  (let ((root (projectile-project-root)))
+    (if root
+        (let ((log-file (concat root ".metals/metals.log"))
+              (buffer (get-buffer-create "*metals-log*")))
+          (setq log-process (start-process "metals-log" buffer "tail" "-n" "100" "-f" log-file))
+          (switch-to-buffer buffer))
+      (error "Project root not found."))))
+
+;; https://stackoverflow.com/questions/12634850/how-to-rename-a-file-by-editing-its-current-name
+(defun rename-file-and-buffer ()
+  "Renames current buffer and file it is visiting."
+  (interactive)
+  (let ((name (buffer-name))
+        (filename (buffer-file-name)))
+    (if (not (and filename (file-exists-p filename)))
+        (message "Buffer '%s' is not visiting a file!" name)
+      (let ((new-name (read-file-name "New name: " filename)))
+        (cond ((get-buffer new-name)
+               (message "A buffer named '%s' already exists!" new-name))
+              (t
+               (rename-file name new-name 1)
+               (rename-buffer new-name)
+               (set-visited-file-name new-name)
+               (set-buffer-modified-p nil)))))))
+
+(setq magit-clone-default-directory "~/Developer/rea/")
+
+;; (defun minitest-verify-all ()
+;;   "Run all tests."
+;;   (interactive)
+;;   (minitest--run-command
+;;     (mapconcat 'shell-quote-argument
+;;                (-flatten
+;;                 (--remove (eq nil it)
+;;                  (list "RUBYOPT=-W0" (minitest-bundler-command) "rake" ))) " ")))
