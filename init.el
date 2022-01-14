@@ -5,8 +5,8 @@
              '("melpa" . "https://melpa.org/packages/") t)
 (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 
-(setq mac-command-modifier 'super)
-(setq mac-option-modifier 'meta)
+(setq mac-command-modifier 'meta)
+(setq mac-option-modifier 'super)
 
 ;; (auto-fill-mode 1)
 ;; (setq comment-auto-fill-only-comments 1)
@@ -110,21 +110,6 @@
 (set-terminal-coding-system 'utf-8)
 (set-keyboard-coding-system 'utf-8)
 
-;; hippie expand is dabbrev expand on steroids
-(setq hippie-expand-try-functions-list '(try-expand-dabbrev
-                                         try-expand-dabbrev-all-buffers
-                                         try-expand-dabbrev-from-kill
-                                         try-complete-file-name-partially
-                                         try-complete-file-name
-                                         try-expand-all-abbrevs
-                                         try-expand-list
-                                         try-expand-line
-                                         try-complete-lisp-symbol-partially
-                                         try-complete-lisp-symbol))
-
-;; use hippie-expand instead of dabbrev
-(global-set-key (kbd "M-/") #'hippie-expand)
-
 ;; replace buffer-menu with ibuffer
 (global-set-key (kbd "C-x C-b") #'ibuffer)
 
@@ -178,105 +163,158 @@
 (add-hook 'text-mode-hook #'blink-cursor-mode)
 (setq blink-cursor-interval .5)
 
+(defun xah-cut-line-or-region ()
+  "Cut current line, or text selection.
+When `universal-argument' is called first, cut whole buffer (respects `narrow-to-region').
+
+URL `http://ergoemacs.org/emacs/emacs_copy_cut_current_line.html'
+Version 2015-06-10"
+  (interactive)
+  (if current-prefix-arg
+      (progn ; not using kill-region because we don't want to include previous kill
+        (kill-new (buffer-string))
+        (delete-region (point-min) (point-max)))
+    (progn (if (use-region-p)
+               (kill-region (region-beginning) (region-end) t)
+             (kill-region (line-beginning-position) (line-beginning-position 2))))))
+
 ;; OSX keybindings
 
-;; General
-(global-set-key (kbd "s-P") 'counsel-M-x) ;; Show command palette
-(global-set-key (kbd "<f1>") 'counsel-M-x)
+(bind-keys*
+ ;; General
+ ("M-P" . counsel-M-x)
+ ("M-N" . make-frame) ;; New window/instance
+ ("M-," . crux-find-user-init-file) ;; User Settings
 
-(global-set-key (kbd "s-p") 'counsel-projectile-find-file) ;; Quick open, Go to File
-(global-set-key (kbd "s-N") 'make-frame) ;; New window/instance
+ ;; Basic Editing
+ ("M-x" . xah-cut-line-or-region) ;; Cut line(empty selection)
+ ("M-c" . easy-kill) ;; Copy line(empty selection)
+ ("M-v" . yank)
+ ("s-<down>" . move-text-down) ;; Move line down
+ ("s-<up>" . move-text-up) ;; Move line up
+ ("s-S-<down>" . crux-duplicate-current-line-or-region) ;; Copy line down
+ ("s-S-<up>" . duplicate-current-line-or-region) ;; Copy line up
+ ("M-a" . mark-whole-buffer)
+ ("M-/" . comment-line) ;; Toggle line comment
+
+ ("M-z" . undo-tree-undo)
+ ("M-Z" . undo-tree-redo)
+
+ ("s-S" . write-file)
+ ("M-<up>" . beginning-of-buffer)
+ ("M-<down>" . end-of-buffer)
+ ("M-b" . ivy-switch-buffer)
+ ("M-`" . other-frame)
+ ("M-1" . delete-other-windows)
+ ("s-M-<return>" . toggle-frame-maximized)
+ ("M-k M-w" . delete-other-windows)
+ ("M-2" . (lambda () (interactive)(split-window-vertically) (other-window 1)))
+ ("M-3" . (lambda () (interactive)(split-window-horizontally) (other-window 1)))
+ ("M-\\" . (lambda () (interactive)(split-window-horizontally) (other-window 1)))
+ ("M-k M-\\" . (lambda () (interactive)(split-window-vertically) (other-window 1)))
+
+ ("M-=" . text-scale-increase)
+ ("M--" . text-scale-decrease)
+ ("M-0" . text-scale-adjust)
+
+ ("M-f" . swiper)
+ ("M-w" . delete-window)
+ ("M-s" . save-buffer)
+ ("M-o" . counsel-find-file)
+
+ ("M-t" . projectile-toggle-between-implementation-and-test)
+ ("M-4 t" . projectile-find-implementation-or-test-other-window)
+ ("M-<return>" . crux-smart-open-line) ;; Insert line below
+ ("M-S-<return>" . crux-smart-open-line-above) ;; Insert line above
+ ("M-K" . delete-current-line)
+
+ ;; Emacs
+ ("s-f" . forward-word)
+ ("s-b" . backward-word)
+ ("s-DEL" . backward-kill-word)
+ ("s-d" . kill-word)
+ ("<escape>" . keyboard-escape-quit)
+
+ ;;lsp
+ ("<f12>" . xref-find-definitions)
+ ("M-4 <f12>" . xref-find-definitions-other-window)
+ ("M-<down-mouse-1>" . lsp-find-definition-mouse)
+ ("M-<mouse-1>" . ignore)
+ ("S-<f12>" . xref-find-references)
+ ("M-." . lsp-execute-code-action)
+)
+
+(bind-keys
+ ;; General
+ ("M-p" . counsel-projectile-find-file) ;; Quick open, Go to File
+ ("M-g b" . counsel-bookmark)
+ )
+
+
+
+
 (define-key global-map [remap delete-window] 'delete-window-or-frame) ;; Close window/instance
-(global-set-key (kbd "s-,") 'crux-find-user-init-file) ;; User Settings
-(global-unset-key (kbd "s-k"))
-(global-set-key (kbd "s-k s-s") 'counsel-descbinds)
 
-;; Basic Editing
-(global-set-key (kbd "s-x") 'kill-region) ;; Cut line(empty selection)
-(global-set-key (kbd "s-c") 'kill-ring-save) ;; Copy line(empty selection)
-(global-set-key (kbd "M-<down>") 'move-text-down) ;; Move line down
-(global-set-key (kbd "M-<up>") 'move-text-up) ;; Move line up
-(global-set-key (kbd "s-K") 'delete-current-line) ;; Delete line
-(global-set-key (kbd "s-<return>") 'crux-smart-open-line) ;; Insert line below
-(global-set-key (kbd "s-S-<return>") 'crux-smart-open-line-above) ;; Insert line above
-(global-set-key (kbd "M-S-<down>") 'crux-duplicate-current-line-or-region) ;; Copy line down
-(global-set-key (kbd "M-S-<up>") 'duplicate-current-line-or-region) ;; Copy line up
-(global-unset-key (kbd "s-|"))
-(global-set-key (kbd "s-|") 'goto-match-paren)
-(global-set-key (kbd "s-]") 'stupid-indent-line) ;; Indent line
-(global-set-key (kbd "s-[") 'stupid-outdent-line) ;; Outdent line
-(global-set-key (kbd "s-<left>") 'crux-move-beginning-of-line) ;; Go to beginning of line
-(global-set-key (kbd "s-<right>") 'move-end-of-line) ;; Go to end of line
-(global-set-key (kbd "M-s-“") 'yafolding-hide-element) ;; Fold all subregions
-(global-set-key (kbd "M-s-‘") 'yafolding-show-element) ;; Unfold subregions
-(global-set-key (kbd "s-k s-0") 'yafolding-hide-all) ;; Fold all regions
-(global-set-key (kbd "s-k s-j") 'yafolding-show-all) ;; Unfold all regions
-(global-set-key (kbd "s-k s-j") 'yafolding-show-all) ;; Unfold all regions
-(global-set-key (kbd "s-/") 'comment-line) ;; Toggle line comment
-
-;; Multi-cursor and Selection
-(global-unset-key (kbd "M-<down-mouse-1>"))
-(global-set-key (kbd "M-<mouse-1>") 'mc/add-cursor-on-click) ;; Insert cursor
-(global-set-key (kbd "M-s-<up>") 'mc/mark-previous-like-this) ;; Insert cursor above
-(global-set-key (kbd "M-s-<down>") 'mc/mark-next-like-this) ;; Insert cursor below
-(global-set-key (kbd "M-I") 'mc/edit-ends-of-lines) ;; Insert cursor below
-
-(global-set-key (kbd "<f12>") 'xref-find-definitions)
-(global-set-key (kbd "s-4 <f12>") 'xref-find-definitions-other-window)
-;; (global-set-key (kbd "s-<down-mouse-1>") 'lsp-find-definition-mouse)
-;; (global-set-key (kbd "s-<mouse-1>") 'ignore)
-(global-set-key (kbd "S-<f12>") 'xref-find-references)
-(global-set-key (kbd "s-.") 'lsp-execute-code-action)
-(global-set-key (kbd "M-<f12>") 'eglot-find-typeDefinition)
+;; (global-unset-key (kbd "s-k"))
+;; (global-set-key (kbd "s-k s-s") 'counsel-descbinds)
 
 
-;; (global-set-key (kbd "s-v") 'vterm-yank)
+;; (global-set-key (kbd "s-K") 'delete-current-line) ;; Delete line
 
-;; Others
-(global-set-key (kbd "S-<SPC>") 'set-mark-command) ;; Insert cursor below
-(global-set-key (kbd "s-v") 'yank)
+;; (global-unset-key (kbd "s-|"))
+;; (global-set-key (kbd "s-|") 'goto-match-paren)
+;; (global-set-key (kbd "s-]") 'stupid-indent-line) ;; Indent line
+;; (global-set-key (kbd "s-[") 'stupid-outdent-line) ;; Outdent line
+;; (global-set-key (kbd "s-<left>") 'crux-move-beginning-of-line) ;; Go to beginning of line
+;; (global-set-key (kbd "s-<right>") 'move-end-of-line) ;; Go to end of line
+;; (global-set-key (kbd "M-s-“") 'yafolding-hide-element) ;; Fold all subregions
+;; (global-set-key (kbd "M-s-‘") 'yafolding-show-element) ;; Unfold subregions
+;; (global-set-key (kbd "s-k s-0") 'yafolding-hide-all) ;; Fold all regions
+;; (global-set-key (kbd "s-k s-j") 'yafolding-show-all) ;; Unfold all regions
+;; (global-set-key (kbd "s-k s-j") 'yafolding-show-all) ;; Unfold all regions
 
-(global-set-key (kbd "s-q") 'save-buffers-kill-terminal)
-(global-set-key (kbd "s-a") 'mark-whole-buffer)
 
-(global-set-key (kbd "s-w") 'delete-window)
-(global-set-key (kbd "s-W") 'delete-frame)
-;; (global-set-key (kbd "s-n") 'make-frame)
-(global-set-key (kbd "s-z") 'undo-tree-undo)
-(global-set-key (kbd "s-Z") 'undo-tree-redo)
-(global-set-key (kbd "s-=") 'text-scale-increase)
-(global-set-key (kbd "s--") 'text-scale-decrease)
-(global-set-key (kbd "s-0") 'text-scale-adjust)
-(global-set-key (kbd "C-M-f") 'toggle-frame-maximized)
-(global-set-key (kbd "s-f") 'swiper)
-;; (global-set-key (kbd "s-t") 'counsel-projectile-find-file)
-(global-set-key (kbd "s-o") 'counsel-find-file)
-(global-set-key (kbd "s-s") 'save-buffer)
-(global-set-key (kbd "s-S") 'write-file)
-(global-set-key (kbd "s-<up>") 'beginning-of-buffer)
-(global-set-key (kbd "s-<down>") 'end-of-buffer)
-(global-set-key (kbd "s-b") 'ivy-switch-buffer)
-(global-set-key (kbd "s-`") 'other-frame)
-(global-set-key (kbd "s-1") 'delete-other-windows)
-(global-set-key (kbd "s-M-<return>") 'toggle-frame-maximized)
-(global-set-key (kbd "s-k s-w") 'delete-other-windows)
-(global-set-key (kbd "s-2") (lambda () (interactive)(split-window-vertically) (other-window 1)))
-(global-set-key (kbd "s-3") (lambda () (interactive)(split-window-horizontally) (other-window 1)))
-(global-set-key (kbd "s-\\") (lambda () (interactive)(split-window-horizontally) (other-window 1)))
-(global-set-key (kbd "s-k s-\\") (lambda () (interactive)(split-window-vertically) (other-window 1)))
-(global-unset-key (kbd "s-g"))
-(global-set-key (kbd "s-g s-l") 'goto-line)
-(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-;; (global-set-key (kbd "<escape>") 'keyboard-quit)
 
-(define-key 'help-command (kbd "C-i") #'info-display-manual)
 
-(global-set-key (kbd "s-t") 'projectile-toggle-between-implementation-and-test)
+;; (global-set-key (kbd "<f12>") 'xref-find-definitions)
+;; (global-set-key (kbd "s-4 <f12>") 'xref-find-definitions-other-window)
+;; ;; (global-set-key (kbd "s-<down-mouse-1>") 'lsp-find-definition-mouse)
+;; ;; (global-set-key (kbd "s-<mouse-1>") 'ignore)
+;; (global-set-key (kbd "S-<f12>") 'xref-find-references)
+;; (global-set-key (kbd "s-.") 'lsp-execute-code-action)
+;; (global-set-key (kbd "M-<f12>") 'eglot-find-typeDefinition)
 
-(global-set-key (kbd "s-4 t") 'projectile-find-implementation-or-test-other-window)
-(global-set-key (kbd "s-T") 'dired-sidebar-toggle-sidebar)
 
-(global-set-key (kbd "s-n") 'ivy-next-history-element)
+;; ;; (global-set-key (kbd "s-v") 'vterm-yank)
+
+;; ;; Others
+;; (global-set-key (kbd "S-<SPC>") 'set-mark-command) ;; Insert cursor below
+
+
+;; (global-set-key (kbd "s-q") 'save-buffers-kill-terminal)
+
+
+
+;; (global-set-key (kbd "s-W") 'delete-frame)
+
+
+;; (global-set-key (kbd "C-M-f") 'toggle-frame-maximized)
+
+;; ;; (global-set-key (kbd "s-t") 'counsel-projectile-find-file)
+
+
+
+
+;; (global-unset-key (kbd "s-g"))
+;; (global-set-key (kbd "s-g s-l") 'goto-line)
+;; (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+;; ;; (global-set-key (kbd "<escape>") 'keyboard-quit)
+
+;; (define-key 'help-command (kbd "C-i") #'info-display-manual)
+
+;; (global-set-key (kbd "s-T") 'dired-sidebar-toggle-sidebar)
+
+;; (global-set-key (kbd "s-n") 'ivy-next-history-element)
 ;; (global-set-key (kbd "s-p") 'ivy-previous-history-element)
 
 
@@ -409,9 +447,9 @@ results buffer.")
   (global-set-key (kbd "C-x C-f") 'counsel-find-file)
   (define-key ivy-minibuffer-map (kbd "C-o") 'ivy-occur)
   (define-key ivy-minibuffer-map (kbd "C-c C-e") '+ivy/woccur)
-  (define-key ivy-minibuffer-map (kbd "C-s-j") 'ivy-immediate-done)
-  (define-key ivy-minibuffer-map (kbd "C-s-n") 'ivy-next-line-and-call)
-  (define-key ivy-minibuffer-map (kbd "C-s-p") 'ivy-previous-line-and-call)
+  (define-key ivy-minibuffer-map (kbd "s-j") 'ivy-immediate-done)
+  (define-key ivy-minibuffer-map (kbd "s-n") 'ivy-next-line-and-call)
+  (define-key ivy-minibuffer-map (kbd "s-p") 'ivy-previous-line-and-call)
   (define-key isearch-mode-map (kbd "C-o") 'isearch-occur)
   (define-key ivy-occur-grep-mode-map (kbd "e") 'ivy-wgrep-change-to-wgrep-mode))
 
@@ -439,7 +477,7 @@ results buffer.")
   :ensure t
   :bind
   (("C-x g" . magit-status)
-   ("s-m" . magit-status)
+   ("M-m" . magit-status)
    ("C-M-<tab>" . magit-section-cycle))
   :config
   (setq magit-display-buffer-function #'magit-display-buffer-fullframe-status-v1))
@@ -453,7 +491,7 @@ results buffer.")
 
 (use-package git-timemachine
   :ensure t
-  :bind (("s-g" . git-timemachine)))
+  :bind (("M-g" . git-timemachine)))
 
 ;; (use-package solarized-theme
 ;;   :ensure t
@@ -491,7 +529,7 @@ results buffer.")
   (setq projectile-completion-system 'ivy)
   (setq projectile-project-search-path '("~/Developer/rea"))
   :config
-  (define-key projectile-mode-map (kbd "C-s-p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-M-p") 'projectile-command-map)
   (projectile-global-mode +1)
   (setq projectile-switch-project-action 'projectile-dired))
 
@@ -512,7 +550,7 @@ results buffer.")
 
 (use-package counsel-projectile
   :ensure t
-  :bind* ("s-F" . counsel-projectile-rg)
+  :bind* ("M-F" . counsel-projectile-rg)
   :init
   (counsel-projectile-mode))
   ;; :config
@@ -527,8 +565,6 @@ results buffer.")
   :ensure t
   :diminish smartparens-mode
   :bind
-  (("C-s-f" . sp-forward-sexp)
-   ("C-s-b" . sp-backward-sexp))
   :init
   (progn
     (require 'smartparens-config)
@@ -622,13 +658,14 @@ results buffer.")
 
 (use-package anzu
   :ensure t
-  :bind (("M-%" . anzu-query-replace)
-         ("M-s-f" . anzu-query-replace-regexp))
+  :bind (("M-s-f" . anzu-query-replace)
+         ("M-s-h" . anzu-query-replace-regexp))
   :config
   (global-anzu-mode))
 
 (use-package easy-kill
   :ensure t
+  :init (setq rubocop-keymap-prefix (kbd "M-R"))
   :config
   (global-set-key [remap kill-ring-save] 'easy-kill))
 
@@ -696,6 +733,8 @@ results buffer.")
   (add-hook 'ruby-mode-hook #'inf-ruby-minor-mode)
   (setq company-global-modes '(not inf-ruby-mode)))
 
+(setq-default flycheck-disabled-checkers '(ruby-reek))
+
 (use-package ruby-mode
   :bind
   ("C-'" . ruby-toggle-string-quotes)
@@ -722,14 +761,14 @@ results buffer.")
 (use-package seeing-is-believing
   :ensure t
   :bind (:map ruby-mode-map
-              ("s-e e" . seeing-is-believing-run-as-xmpfilter)
-              ("s-e a" . seeing-is-believing-run)
-              ("s-e c" . seeing-is-believing-clear)
-              ("s-e m" . seeing-is-believing-mark-current-line-for-xmpfilter)))
+              ("M-e e" . seeing-is-believing-run-as-xmpfilter)
+              ("M-e a" . seeing-is-believing-run)
+              ("M-e c" . seeing-is-believing-clear)
+              ("M-e m" . seeing-is-believing-mark-current-line-for-xmpfilter)))
 
 (use-package rubocop
   :ensure t
-  :init (setq rubocop-keymap-prefix (kbd "s-R"))
+  :init (setq rubocop-keymap-prefix (kbd "M-R"))
   :config
   ;; (defun rubocop-autocorrect-current-file-silent ()
   ;;   (save-window-excursion (rubocop-autocorrect-current-file)))
@@ -741,18 +780,18 @@ results buffer.")
 
 (use-package rspec-mode
   :ensure t
-  :init (setq rspec-key-command-prefix (kbd "s-R"))
+  :init (setq rspec-key-command-prefix (kbd "M-R"))
   :bind*
-  (("s-r" . rspec-rerun))
+  (("M-r" . rspec-rerun))
   :bind
   (
    ;; ("s-t" . rspec-toggle-spec-and-target)
    ;; ("s-4 t" . rspec-find-spec-or-target-other-window)
-   ("s-r" . rspec-rerun))
+   ("M-r" . rspec-rerun))
   :config
-  (setq compilation-scroll-output nil)
-  (setq rspec-use-docker-when-possible nil)
-  (setq rspec-docker-container "app")
+  (setq compilation-scroll-output t)
+  (setq rspec-use-docker-when-possible t)
+  (setq rspec-docker-container "ci")
   (setq rspec-primary-source-dirs '("app" "lib")))
   ;; (setq rspec-primary-source-dirs '("app")))
 
@@ -795,6 +834,7 @@ results buffer.")
   (setq cider-allow-jack-in-without-project t)
   (add-hook 'cider-repl-mode-hook #'rainbow-delimiters-mode))
 
+(setq js-indent-level 2)
 ;; (use-package js2-mode
 ;;   :ensure t
 ;;   :init
@@ -831,11 +871,41 @@ results buffer.")
 
 (use-package typescript-mode
   :ensure t
-  :mode "\\.tsx?$"
+  :mode "\\.ts\\'"
+  :hook (typescript-mode . lsp-deferred)
+  :config
+  (setq typescript-indent-level 2))
+
+;; Set up before-save hooks to format buffer and add/delete imports.
+;; Make sure you don't have other gofmt/goimports hooks enabled.
+(defun lsp-go-install-save-hooks ()
+  (add-hook 'before-save-hook #'lsp-format-buffer t t)
+  (add-hook 'before-save-hook #'lsp-organize-imports t t))
+
+(use-package go-mode
+  :ensure t
+  :mode "\\.go\\'"
   :hook
-  (typescript-mode . lsp)
-  :custom
-  (typescript-indent-level 2))
+  (go-mode . lsp-deferred)
+  (go-mode . lsp-go-install-save-hooks))
+
+
+(defun disable-abbrev-mode()
+  (add-hook 'before-save-hook #'lsp-format-buffer t t)
+  (add-hook 'before-save-hook #'lsp-organize-imports t t))
+
+(use-package sml-mode
+  :ensure t
+  :config
+  (abbrev-mode nil))
+
+;; (use-package typescript-mode
+;;   :ensure t
+;;   :mode "\\.tsx?$"
+;;   :hook
+;;   (typescript-mode . lsp)
+;;   :custom
+;;   (typescript-indent-level 2))
 
 (use-package haml-mode
   :ensure t)
@@ -843,7 +913,8 @@ results buffer.")
 (use-package markdown-mode
   :ensure t
   :bind
-  (("s-l" . markdown-live-preview-mode))
+  (("s-l" . markdown-live-preview-mode)
+   )
   :commands (markdown-mode gfm-mode)
   :mode (("README\\.md\\'" . gfm-mode))
   :init (setq markdown-command "/usr/local/bin/pandoc"))
@@ -856,7 +927,8 @@ results buffer.")
   :bind (("TAB" . company-indent-or-complete-common))
   :config
   (global-company-mode)
-  (setq lsp-completion-provider :capf)
+  ;; (setq lsp-completion-provider :none)
+  (setq company-backends '((:separate company-capf company-dabbrev-code)))
   ;; (add-to-list 'company-backends 'company-elm)
   ;; (add-to-list 'company-backends 'company-lsp)
   ;; See https://github.com/company-mode/company-mode/issues/60
@@ -879,6 +951,7 @@ results buffer.")
   (setq ispell-program-name "aspell" ; use aspell instead of ispell
         ispell-extra-args '("--sug-mode=ultra"))
   (add-hook 'text-mode-hook #'flyspell-mode)
+  (add-hook 'markdown-mode-hook #'flyspell-mode)
   (add-hook 'prog-mode-hook #'flyspell-prog-mode))
 
 (use-package flycheck
@@ -934,7 +1007,6 @@ results buffer.")
          ("C-c r" . rename-file-and-buffer)
          ("C-c k" . crux-kill-other-buffers)
          ("C-c TAB" . crux-indent-rigidly-and-copy-to-clipboard)
-         ("s-," . crux-find-user-init-file)
          ("C-c S" . crux-find-shell-init-file)
          ;; ("s-r" . crux-recentf-find-file)
          ("s-j" . crux-top-join-line)
@@ -952,27 +1024,35 @@ results buffer.")
   :ensure t
   :bind ("C-;" . iedit-mode))
 
+
+ ;; ;; Multi-cursor and Selection
+;; (global-unset-key (kbd "M-<down-mouse-1>"))
+;; (global-set-key (kbd "M-<mouse-1>") 'mc/add-cursor-on-click) ;; Insert cursor
+;; (global-set-key (kbd "M-s-<up>") 'mc/mark-previous-like-this) ;; Insert cursor above
+;; (global-set-key (kbd "M-s-<down>") 'mc/mark-next-like-this) ;; Insert cursor below
+;; (global-set-key (kbd "M-I") 'mc/edit-ends-of-lines) ;; Insert cursor below
+
 (use-package multiple-cursors
   :ensure t
   :init (global-unset-key (kbd "s-k"))
   :bind* (("C-S-c C-S-c" . mc/edit-lines)
-          ("s-d" . mc/mark-next-like-this)
-          ("s-k s-d" . mc/skip-to-next-like-this)
+          ("M-d" . mc/mark-next-like-this)
+          ("M-k M-d" . mc/skip-to-next-like-this)
          ("C-<" . mc/mark-previous-like-this)
-         ("C-s-g" . mc/mark-all-like-this)
+         ("C-M-g" . mc/mark-all-like-this)
          ("M-C-<mouse-1>" . mc/add-cursor-on-click)))
 
 (use-package dumb-jump
   :ensure t
-  :init (global-unset-key (kbd "s-g"))
-  :bind (("s-g o" . dumb-jump-go-other-window)
-         ("s-g o" . dumb-jump-go-other-window)
-         ("s-g j" . dumb-jump-go)
-         ("s-g g" . goto-line)
+  :init (global-unset-key (kbd "M-g"))
+  :bind (("M-g o" . dumb-jump-go-other-window)
+         ("M-g o" . dumb-jump-go-other-window)
+         ("M-g j" . dumb-jump-go)
+         ("M-g g" . goto-line)
          ;; ("<f12>" . dumb-jump-go)
-         ("s-g i" . dumb-jump-go-prompt)
-         ("s-g x" . dumb-jump-go-prefer-external)
-         ("s-g z" . dumb-jump-go-prefer-external-other-window))
+         ("M-g i" . dumb-jump-go-prompt)
+         ("M-g x" . dumb-jump-go-prefer-external)
+         ("M-g z" . dumb-jump-go-prefer-external-other-window))
   :config (setq dumb-jump-selector 'ivy))
 
 (use-package ag
@@ -1136,12 +1216,12 @@ results buffer.")
 
 (use-package default-text-scale
   :ensure t
-  :bind (("s-=" . default-text-scale-increase)
-         ("s--" . default-text-scale-decrease)))
+  :bind (("M-=" . default-text-scale-increase)
+         ("M--" . default-text-scale-decrease)))
 
 (use-package git-messenger
   :ensure t
-  :bind ("s-h" . git-messenger:popup-message)
+  :bind ("M-h" . git-messenger:popup-message)
   :init
   (setq git-messenger:show-detail t))
 
@@ -1194,12 +1274,13 @@ results buffer.")
          (scala-mode . lsp-install-save-hooks)
          (lsp-mode . lsp-lens-mode)
   :config
+  (setq lsp-completion-provider :none)
   ;; Uncomment following section if you would like to tune lsp-mode performance according to
   ;; https://emacs-lsp.github.io/lsp-mode/page/performance/
-  ;;       (setq gc-cons-threshold 100000000) ;; 100mb
+        (setq gc-cons-threshold 100000000) ;; 100mb
         (setq read-process-output-max (* 1024 1024)) ;; 1mb
-  ;;       (setq lsp-idle-delay 0.500)
-  ;;       (setq lsp-log-io nil)
+        (setq lsp-idle-delay 0.500)
+        (setq lsp-log-io nil)
   ;;       (setq lsp-completion-provider :capf)
   (setq lsp-prefer-flymake nil))
 
@@ -1446,10 +1527,10 @@ _p_rev       _u_pper              _=_: upper/lower       _r_esolve
   :ensure t
   :mode ("\\.\\(http\\|rest\\)$" . restclient-mode))
 
-(use-package company-restclient
-  :ensure t
-  :config
-  (add-to-list 'company-backends 'company-restclient))
+;; (use-package company-restclient
+;;   :ensure t
+;;   :config
+;;   (add-to-list 'company-backends 'company-restclient))
 
 (use-package slim-mode
   :ensure t)
@@ -1629,6 +1710,10 @@ one specified by listing header."
 (global-set-key (kbd "C-c C-d") #'helpful-at-point)
 (global-set-key (kbd "C-h F") #'helpful-function)
 
+(use-package eshell-z
+  :ensure t)
+
+
 ;; (defun my-forge-post-submit-callback-kill-url (value _headers _status _req)
 ;;   (when t
 ;;     (when-let ((url (alist-get 'html_url value)))
@@ -1678,3 +1763,37 @@ one specified by listing header."
 ;;                (-flatten
 ;;                 (--remove (eq nil it)
 ;;                  (list "RUBYOPT=-W0" (minitest-bundler-command) "rake" ))) " ")))
+
+
+(unbind-key "C-M-p" smartparens-mode-map)
+(unbind-key "M-p" markdown-mode-map)
+
+
+(setq eshell-prompt-regexp "^[^#$\n]*[#$] "
+      eshell-prompt-function
+      (lambda nil
+        (concat
+	 "[" (getenv "AWS_ROLE") "@" (system-name) " "
+	 (if (string= (eshell/pwd) (getenv "HOME"))
+	     "~" (eshell/basename (eshell/pwd)))
+	 "]"
+	 (if (= (user-uid) 0) "# " "$ "))))
+
+
+(use-package hippie-exp
+  :bind (("S-<tab>"   . hippie-expand))
+  :config
+  (setq hippie-expand-try-functions-list '(try-expand-dabbrev
+                                           try-expand-dabbrev-all-buffers
+                                           try-expand-dabbrev-from-kill
+                                           try-complete-file-name-partially
+                                           try-complete-file-name
+                                           try-expand-all-abbrevs
+                                           try-expand-list
+                                           try-expand-line
+                                           try-complete-lisp-symbol-partially
+                                           try-complete-lisp-symbol)))
+
+(use-package nand2tetris
+  :ensure t
+  :mode (("\\.hdl\\'" . nand2tetris-mode)))
