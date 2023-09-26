@@ -1,3 +1,17 @@
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 6))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+
 (require 'package)
 (setq byte-compile-warnings '(cl-functions))
 
@@ -213,9 +227,9 @@ Version 2015-06-10"
  ("M-\\" . (lambda () (interactive)(split-window-horizontally) (other-window 1)))
  ("M-k M-\\" . (lambda () (interactive)(split-window-vertically) (other-window 1)))
 
- ("M-=" . text-scale-increase)
- ("M--" . text-scale-decrease)
- ("M-0" . text-scale-adjust)
+ ;; ("M-=" . text-scale-increase)
+ ;; ("M--" . text-scale-decrease)
+ ;; ("M-0" . text-scale-adjust)
 
  ("M-f" . swiper)
  ("M-w" . delete-window)
@@ -550,10 +564,10 @@ results buffer.")
 
 (use-package counsel-projectile
   :ensure t
-  :bind* ("M-F" . counsel-projectile-rg)
-  :init
-  (counsel-projectile-mode))
-  ;; :config
+  :bind* ("M-F" . counsel-projectile-rg))
+  ;; :init
+  ;; (counsel-projectile-mode))
+  ;; ;; :config
   ;; (ivy-set-occur 'counsel-projectile-find-file 'counsel-projectile-find-file-occur)
   ;; (ivy-set-occur 'counsel-projectile 'counsel-projectile-find-file-occur))
 
@@ -791,7 +805,7 @@ results buffer.")
   :config
   (setq compilation-scroll-output t)
   (setq rspec-use-docker-when-possible t)
-  (setq rspec-docker-container "ci")
+  (setq rspec-docker-container "dev")
   (setq rspec-primary-source-dirs '("app" "lib")))
   ;; (setq rspec-primary-source-dirs '("app")))
 
@@ -1797,3 +1811,27 @@ one specified by listing header."
 (use-package nand2tetris
   :ensure t
   :mode (("\\.hdl\\'" . nand2tetris-mode)))
+
+(use-package dockerfile-mode
+  :ensure t
+  :mode
+  ("Dockerfile\\'" . dockerfile-mode)
+  :config
+  (setq-default docker-use-sudo nil))
+
+(use-package copilot
+  :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+  :ensure t
+  :hook (prog-mode . copilot-mode)
+  :bind (:map copilot-completion-map
+              ("<tab>" . 'copilot-accept-completion)
+              ("TAB" . 'copilot-accept-completion)
+              ("s-<right>" . 'copilot-accept-completion-by-word)
+              ("S-<tab>" . 'copilot-next-completion)))
+
+
+(use-package ts-fold
+  :straight (ts-fold :type git :host github :repo "emacs-tree-sitter/ts-fold"))
+
+(use-package yafolding
+  :ensure t)
